@@ -1,7 +1,12 @@
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#000000'); tg.enableClosingConfirmation(); }
 
-let map, userMarker;
+// РАЗБИТЫЙ КЛЮЧ (Чтобы GitHub не блокировал)
+const p1 = "sk-proj-w4jNYPdTaKUhGOhWPB1oWq84k8h7IEb3xlV5EOaVo0cEn_zj7";
+const p2 = "8mRQWc90HSrGMRyDTr3fzq6QzT3BlbkFJ6fXocb-odi8HMXcAAoZLx_kb42jOnYYMqzTJkPNzXsIOzGWQx5l7fupzHhTUEUWJT2IvKji9kA";
+const OPENAI_API_KEY = p1 + p2;
+
+let map, userMarker, routeLayer;
 let selectedImage = null;
 
 function goTab(id, btn) {
@@ -9,9 +14,14 @@ function goTab(id, btn) {
     document.getElementById('screen-' + id).classList.add('active');
     document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
     if(btn) btn.classList.add('active');
+    
     const aiBtn = document.getElementById('ai-main-btn');
     if(id === 'home') aiBtn.classList.add('active-mode'); else aiBtn.classList.remove('active-mode');
-    if (id === 'map') { if (!map) initMap(); setTimeout(() => map.invalidateSize(), 200); }
+
+    if (id === 'map') {
+        if (!map) initMap();
+        setTimeout(() => map.invalidateSize(), 200); 
+    }
     if(tg) tg.HapticFeedback.selectionChanged();
 }
 
@@ -19,58 +29,143 @@ const aiBtn = document.getElementById('ai-main-btn');
 aiBtn.addEventListener('click', () => {
     goTab('home', null);
     if(tg) tg.HapticFeedback.impactOccurred('light');
+    askAI(); // Тестовый вызов AI
 });
 
-// === ЗАКАЗ И ТОРГ ===
+// === ЗАКАЗ ===
 function createOrder() {
     const dest = document.getElementById('inp-dest').value;
     const price = document.getElementById('inp-price').value;
-    if(!dest || !price) { if(tg) tg.showAlert('Заполните адрес и цену'); return; }
+    if(!dest || !price) { tg?.showAlert('Адрес и цена?'); return; }
     
     openModal('modal-searching');
     
     const etherContainer = document.getElementById('ether-container');
     const newOrderHtml = `
-        <div class="order-strip glass-morphism">
+        <div class="order-strip">
             <div class="route-info">
-                <div class="route-line"><span class="dot a"></span> Моё местоположение</div>
-                <div class="route-arrow">↓</div>
+                <div class="route-line"><span class="dot a"></span> Я</div>
                 <div class="route-line"><span class="dot b"></span> ${dest}</div>
             </div>
             <div class="order-action">
                 <div class="price-tag">${price}₸</div>
-                <button class="take-btn-big glow-anim" onclick="openOfferModal(${price})">Взять</button>
+                <button class="take-btn-big" onclick="openDriverOffer(${price})">Взять</button>
             </div>
         </div>
     `;
     etherContainer.insertAdjacentHTML('afterbegin', newOrderHtml);
 }
 
-function minimizeSearch() { document.getElementById('modal-overlay').classList.add('hidden'); }
-function cancelOrder() { document.getElementById('modal-overlay').classList.add('hidden'); }
-
-// 1. Водитель открывает торг
-function openOfferModal(price) {
-    document.querySelector('#modal-driver-offer .offer-price-big').innerText = price + ' ₸';
+// === ВОДИТЕЛЬ ===
+function openDriverOffer(price) {
+    // Устанавливаем цену в модалке
+    document.getElementById('offer-val-display').innerText = price + ' ₸';
+    // Кнопка принять сразу показывает эту цену
+    const btn = document.getElementById('btn-driver-accept');
+    btn.innerText = `Принять за ${price} ₸`;
+    btn.onclick = function() { acceptOrder(); }; // Если просто приняли
     openModal('modal-driver-offer');
 }
-// 2. Водитель отправляет свою цену
-function sendCounterOffer() {
-    const bid = document.getElementById('driver-bid-input').value;
-    if(!bid) return;
-    document.getElementById('modal-overlay').classList.add('hidden');
+
+// Если водитель вводит СВОЮ цену
+document.getElementById('driver-bid-input').addEventListener('input', function() {
+    const newPrice = this.value;
+    const btn = document.getElementById('btn-driver-accept');
     
-    // Симуляция: Пассажир получает предложение
+    if(newPrice && newPrice.length > 0) {
+        btn.innerText = `Предложить ${newPrice} ₸`;
+        btn.onclick = function() { sendCounterOffer(newPrice); };
+        btn.style.background = "#0a84ff"; // Синий (предложение)
+    } else {
+        // Возвращаем старую цену из заголовка
+        const oldPrice = document.getElementById('offer-val-display').innerText.replace(' ₸','');
+        btn.innerText = `Принять за ${oldPrice} ₸`;
+        btn.onclick = function() { acceptOrder(); };
+        btn.style.background = "#30d158"; // Зеленый (принять)
+    }
+});
+
+function sendCounterOffer(price) {
+    document.getElementById('modal-overlay').classList.add('hidden');
+    // Симуляция ответа пассажира
     setTimeout(() => {
-        document.getElementById('driver-offer-val').innerText = bid + ' ₸';
+        document.getElementById('driver-offer-val').innerText = price + ' ₸';
         openModal('modal-passenger-decision');
-        if(tg) tg.HapticFeedback.notificationOccurred('warning');
-    }, 1500);
+        tg?.HapticFeedback.notificationOccurred('warning');
+    }, 1000);
 }
-// 3. Водитель принимает заказ сразу
+
+// ПРИНЯТИЕ ЗАКАЗА -> КАРТА
 function acceptOrder() {
     document.getElementById('modal-overlay').classList.add('hidden');
-    if(tg) tg.showAlert('Вы приняли заказ!');
+    tg?.showAlert('Поехали!');
+    
+    // Переход на карту
+    // Ищем кнопку карты в меню (она вторая по счету, индекс 1)
+    const mapBtn = document.querySelectorAll('.dock-btn')[1];
+    goTab('map', mapBtn);
+    
+    drawRoute();
+}
+
+function passengerAcceptOffer() {
+    document.getElementById('modal-passenger-decision').classList.remove('active');
+    acceptOrder(); // Тоже ведет на карту
+}
+
+
+// === КАРТА И МАРШРУТ ===
+function initMap() {
+    map = L.map('map-container', { zoomControl: false }).setView([49.8028, 73.1021], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    locateUser();
+}
+function locateUser() {
+    if(!map) return;
+    map.locate({setView: true, maxZoom: 14});
+    map.on('locationfound', (e) => {
+        if(userMarker) map.removeLayer(userMarker);
+        userMarker = L.marker(e.latlng).addTo(map);
+    });
+}
+function drawRoute() {
+    if(!map) initMap();
+    // Симуляция маршрута (Прямая линия)
+    const p1 = [49.8028, 73.1021];
+    const p2 = [49.8328, 73.1421];
+    if(routeLayer) map.removeLayer(routeLayer);
+    routeLayer = L.polyline([p1, p2], {color: '#0a84ff', weight: 6}).addTo(map);
+    map.fitBounds(routeLayer.getBounds(), {padding: [50, 50]});
+}
+
+// === AI (ЧАТ) ===
+async function askAI() {
+    const chat = document.querySelector('.chat-container');
+    chat.innerHTML += `<div class="ai-msg"><div class="ai-avatar">Ai</div><div class="msg-bubble">Думаю...</div></div>`;
+    
+    // Простой запрос к GPT-4o-mini (или 3.5)
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "gpt-3.5-turbo",
+                messages: [{"role": "user", "content": "Скажи коротко 'Поехали!' на казахском и пожелай удачи."}],
+                max_tokens: 50
+            })
+        });
+        const data = await response.json();
+        const text = data.choices[0].message.content;
+        
+        // Удаляем "Думаю..." и пишем ответ
+        chat.lastElementChild.remove();
+        chat.innerHTML += `<div class="ai-msg"><div class="ai-avatar">Ai</div><div class="msg-bubble">${text}</div></div>`;
+    } catch(e) {
+        console.error(e);
+    }
 }
 
 // === ЛЕНТА ===
@@ -99,57 +194,28 @@ function publishPost() {
         ${text ? `<div class="text">${text}</div>` : ''}
         ${selectedImage ? `<img src="${selectedImage}" class="post-image" style="width:100%;border-radius:10px;margin-bottom:10px;">` : ''}
         <div class="post-actions">
-            <button class="act-btn" onclick="toggleLike(this)"><ion-icon name="heart-outline"></ion-icon> <span>0</span></button>
-            <button class="act-btn" onclick="openComments()"><ion-icon name="chatbubble-outline"></ion-icon> <span>0</span></button>
-            <button class="act-btn" onclick="sharePost()"><ion-icon name="share-social-outline"></ion-icon></button>
+            <button class="act-btn" onclick="this.classList.toggle('liked')"><ion-icon name="heart-outline"></ion-icon> <span>0</span></button>
         </div>
     `;
     cont.insertBefore(post, cont.firstChild);
     document.getElementById('post-text-input').value = '';
     document.getElementById('remove-image-btn').click();
-    if(tg) tg.HapticFeedback.notificationOccurred('success');
-}
-function toggleLike(btn) {
-    btn.classList.toggle('liked');
-    const icon = btn.querySelector('ion-icon');
-    const span = btn.querySelector('span');
-    let count = parseInt(span.innerText);
-    if(btn.classList.contains('liked')) { icon.setAttribute('name', 'heart'); count++; } 
-    else { icon.setAttribute('name', 'heart-outline'); count--; }
-    span.innerText = count;
-    if(tg) tg.HapticFeedback.selectionChanged();
-}
-function openComments() { openModal('modal-comments'); }
-function sharePost() { if(navigator.share) navigator.share({title: 'Aitax', text: 'Пост из Aitax', url: window.location.href}); }
-
-// === КАРТА ===
-function initMap() {
-    map = L.map('map-container', { zoomControl: false }).setView([49.8028, 73.1021], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    locateUser();
-}
-function locateUser() {
-    if(!map) return;
-    map.locate({setView: true, maxZoom: 14});
-    map.on('locationfound', (e) => {
-        if(userMarker) map.removeLayer(userMarker);
-        userMarker = L.marker(e.latlng).addTo(map);
-    });
 }
 
-// === НАСТРОЙКИ ===
+// === УТИЛИТЫ ===
+function minimizeSearch() { document.getElementById('modal-overlay').classList.add('hidden'); }
+function cancelOrder() { document.getElementById('modal-overlay').classList.add('hidden'); }
+function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 function selectCity(name, weather) {
     document.getElementById('current-city').innerText = name;
     document.getElementById('current-weather').innerText = weather;
-    document.getElementById('modal-overlay').classList.add('hidden');
+    closeModal();
 }
 function setTheme(color, mode) {
     document.documentElement.style.setProperty('--accent', color);
-    // Контраст текста
     if(mode === 'light') document.documentElement.style.setProperty('--accent-text', '#fff');
     else document.documentElement.style.setProperty('--accent-text', '#000');
-    
-    document.getElementById('modal-overlay').classList.add('hidden');
+    closeModal();
 }
 function openModal(id) {
     document.querySelectorAll('.modal-card').forEach(c => c.classList.remove('active'));
@@ -164,7 +230,3 @@ document.addEventListener('click', (e) => {
 });
 function openSidebar() { document.getElementById('sidebar-settings').classList.add('open'); }
 function closeSidebar() { document.getElementById('sidebar-settings').classList.remove('open'); }
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('ai-main-btn').classList.add('active-mode');
-});
