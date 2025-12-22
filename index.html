@@ -7,11 +7,8 @@
     
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -21,7 +18,9 @@
 
     <header class="top-bar">
         <div class="status-row">
-            <span class="city">Karaganda</span><span class="divider">•</span><span class="weather">-2°C ❄️</span>
+            <span id="current-city" class="city">Karaganda</span>
+            <span class="divider">•</span>
+            <span id="current-weather" class="weather">-2°C ❄️</span>
         </div>
         <div class="brand-row">
             <div class="logo">Aitax</div>
@@ -34,14 +33,13 @@
         <section id="screen-social" class="view">
             <div class="feed-composer glass-morphism">
                 <div class="composer-top">
-                    <div class="avatar-circle">R</div>
-                    <textarea id="post-text-input" placeholder="Что нового, Руслан?" class="clean-input area" rows="1"></textarea>
+                    <div class="avatar-circle">E</div>
+                    <textarea id="post-text-input" placeholder="Что нового, Елназар?" class="clean-input area" rows="1"></textarea>
                 </div>
                 <div id="image-preview-container" class="hidden">
                      <img id="image-preview" src="" alt="">
                      <button id="remove-image-btn">✕</button>
                 </div>
-                
                 <div class="composer-bot">
                     <input type="file" id="file-input" accept="image/*" hidden>
                     <button class="btn-att" onclick="document.getElementById('file-input').click()">
@@ -50,27 +48,8 @@
                     <button class="btn-post" onclick="publishPost()">Опубликовать</button>
                 </div>
             </div>
-            
             <div class="feed-stream custom-scroll" id="feed-container">
-                <div class="post-card glass-morphism">
-                    <div class="post-head">
-                        <div class="avatar-mini" style="background: #ff2d55;">A</div>
-                        <span class="name">Aisulu</span><span class="time">5м</span>
-                    </div>
-                    <div class="text">На юго-востоке открыли новую дорогу! 🔥 Пробок стало меньше.</div>
-                    <div class="post-actions">
-                        <button class="act-btn like-btn" onclick="toggleLike(this)">
-                            <ion-icon name="heart-outline"></ion-icon> <span class="count">12</span>
-                        </button>
-                        <button class="act-btn comment-btn">
-                            <ion-icon name="chatbubble-outline"></ion-icon> <span class="count">4</span>
-                        </button>
-                         <button class="act-btn share-btn" onclick="sharePost(this)">
-                            <ion-icon name="share-social-outline"></ion-icon>
-                        </button>
-                    </div>
                 </div>
-            </div>
         </section>
 
         <section id="screen-map" class="view" style="padding: 0;">
@@ -82,11 +61,11 @@
              </div>
         </section>
 
-        <section id="screen-home" class="view active home-view">
+        <section id="screen-home" class="view active">
             <div class="chat-container custom-scroll">
                 <div class="ai-msg">
                     <div class="ai-avatar">Ai</div>
-                    <div class="msg-bubble">Привет, Руслан! Куда поедем сегодня?</div>
+                    <div class="msg-bubble">Привет, Елназар! Куда поедем сегодня?</div>
                 </div>
             </div>
 
@@ -131,9 +110,10 @@
 
         <section id="screen-profile" class="view">
             <div class="driver-block glass-morphism">
-                <div class="driver-avatar-big">
-                    <img src="https://i.pravatar.cc/150?img=11" alt="Driver"> </div>
-                <h2 class="driver-name">Руслан Ахметов</h2>
+                <div class="driver-avatar-icon glass-effect">
+                    <ion-icon name="person"></ion-icon>
+                </div>
+                <h2 class="driver-name">Елназар Касенов</h2>
                 <div class="car-details">
                     <span class="car-name">Toyota Camry 70</span>
                     <span class="car-year">2021, Белый</span>
@@ -151,8 +131,15 @@
              <h3 class="section-title" style="padding: 0 20px; margin-top: 20px;">Эфир заказов</h3>
             <div class="orders-list custom-scroll">
                 <div class="order-strip glass-morphism">
-                    <div class="route"><span class="dot a"></span> Гоголя 34 <span class="arrow">→</span> <span class="dot b"></span> Майкудук</div>
-                    <div class="order-bot"><div class="price-tag">2000₸</div><button class="take-btn">Взять</button></div>
+                    <div class="route-info">
+                        <div class="route-line"><span class="dot a"></span> Гоголя 34</div>
+                        <div class="route-arrow">↓</div>
+                        <div class="route-line"><span class="dot b"></span> Майкудук</div>
+                    </div>
+                    <div class="order-action">
+                        <div class="price-tag">2000₸</div>
+                        <button class="take-btn-big glow-anim">Взять</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -167,16 +154,71 @@
     </nav>
 
     <div id="modal-overlay" class="modal-overlay hidden">
+        
+        <div id="modal-profile-edit" class="modal-card">
+            <div class="m-head"><h3>Мои данные</h3><button class="close-m">✕</button></div>
+            <div class="input-group-modal">
+                <label>ФИО</label>
+                <input type="text" class="modal-inp" value="Елназар Касенов">
+            </div>
+            <div class="input-group-modal">
+                <label>Телефон</label>
+                <input type="text" class="modal-inp" value="+7 777 123 45 67">
+            </div>
+            <div class="input-group-modal">
+                <label>Автомобиль</label>
+                <input type="text" class="modal-inp" value="Toyota Camry 70">
+            </div>
+            <button class="btn-att-photo"><ion-icon name="camera"></ion-icon> Сменить фото</button>
+            <button class="btn-full">Сохранить</button>
+        </div>
+
+        <div id="modal-city" class="modal-card">
+            <div class="m-head"><h3>Выбор города</h3><button class="close-m">✕</button></div>
+            <div class="city-list custom-scroll" style="max-height: 300px;">
+                <div class="city-item" onclick="selectCity('Karaganda', '-2°C ❄️')">Karaganda</div>
+                <div class="city-item" onclick="selectCity('Astana', '-15°C 🌬️')">Astana</div>
+                <div class="city-item" onclick="selectCity('Almaty', '+5°C ☀️')">Almaty</div>
+                <div class="city-item" onclick="selectCity('Shymkent', '+12°C ☀️')">Shymkent</div>
+                <div class="city-item" onclick="selectCity('Aktobe', '-5°C ☁️')">Aktobe</div>
+            </div>
+        </div>
+
+        <div id="modal-theme" class="modal-card center-text">
+            <div class="m-head"><h3>Тема оформления</h3><button class="close-m">✕</button></div>
+            <p style="margin-bottom: 15px; color: #aaa;">Выберите акцентный цвет:</p>
+            <div class="theme-grid">
+                <button class="theme-btn" style="background: #0a84ff;" onclick="setTheme('#0a84ff')"></button>
+                <button class="theme-btn" style="background: #FFD700;" onclick="setTheme('#FFD700')"></button>
+                <button class="theme-btn" style="background: #ff2d55;" onclick="setTheme('#ff2d55')"></button>
+                <button class="theme-btn" style="background: #bf5af2;" onclick="setTheme('#bf5af2')"></button>
+                <button class="theme-btn" style="background: #30d158;" onclick="setTheme('#30d158')"></button>
+                <button class="theme-btn" style="background: #ff9f0a;" onclick="setTheme('#ff9f0a')"></button>
+            </div>
+        </div>
+
         <div id="modal-pay" class="modal-card">
             <div class="m-head"><h3>Пополнение</h3><button class="close-m">✕</button></div>
             <input type="number" class="modal-inp" placeholder="Сумма (₸)">
             <button class="btn-full">Оплатить</button>
         </div>
+        <div id="modal-out" class="modal-card"><div class="m-head"><h3>Вывод</h3><button class="close-m">✕</button></div></div>
+        <div id="modal-send" class="modal-card"><div class="m-head"><h3>Перевод</h3><button class="close-m">✕</button></div></div>
+        <div id="promo-burger" class="modal-card center-text">
+             <div class="m-head"><h3>Burger King</h3><button class="close-m">✕</button></div>
+             <div class="big-emoji">🍔</div><p>Скидка 20%!</p>
+        </div>
     </div>
     
     <div id="sidebar-settings" class="sidebar">
          <div class="sidebar-head"><h2>Настройки</h2><button class="close-side" onclick="closeSidebar()">✕</button></div>
-         </div>
+         <div class="set-list">
+            <div class="set-item" onclick="openModal('modal-profile-edit')"><ion-icon name="person-circle-outline"></ion-icon> Профиль (Данные)</div>
+            <div class="set-item" onclick="openModal('modal-city')"><ion-icon name="globe-outline"></ion-icon> Город</div>
+            <div class="set-item" onclick="openModal('modal-theme')"><ion-icon name="color-palette-outline"></ion-icon> Оформление</div>
+            <div class="set-item"><ion-icon name="help-circle-outline"></ion-icon> Поддержка</div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
