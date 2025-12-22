@@ -3,134 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GiDCity Taxi AI</title>
+    <title>GTaX SuperApp</title>
     
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-</head>
+    
+    </head>
 <body>
 
-    <div id="map-container">
-        <div class="ai-grid"></div> <div class="user-location-pulse"></div>
+    <div id="bg-layer" class="bg-cyber">
+        <div class="ai-grid"></div>
     </div>
 
-    <div class="app-interface">
+    <header class="app-header">
+        <div class="header-top">
+            <h1 class="app-logo">GTaX</h1>
+            <button class="btn-settings" id="open-settings">
+                <ion-icon name="settings-sharp"></ion-icon>
+            </button>
+        </div>
+        <div class="header-sub">
+            <span id="current-city">Karaganda</span>
+            <span class="weather-temp">-1°C ❄️</span>
+        </div>
+    </header>
+
+    <main id="main-content">
         
-        <header class="glass-header">
-            <div class="profile-chip">
-                <div class="avatar">R</div>
-                <div class="status-col">
-                    <span class="u-name">Rork</span>
-                    <span class="u-loc">Karaganda • AI Active</span>
+        <section id="tab-home" class="screen active">
+            
+            <div class="ai-bubble-container">
+                <div class="ai-avatar">
+                    <div class="ai-core"></div>
+                </div>
+                <div class="ai-message">
+                    Куда поедем сегодня? Нажми и удерживай кнопку, чтобы сказать.
                 </div>
             </div>
-            <div class="header-actions">
-                <button class="glass-btn-icon" id="btn-settings">
-                    <ion-icon name="options-outline"></ion-icon>
+
+            <div class="order-form glass-panel">
+                <div class="input-row">
+                    <ion-icon name="navigate" class="icon-yellow"></ion-icon>
+                    <div class="input-col">
+                        <label>Откуда</label>
+                        <input type="text" value="Текущее местоположение" readonly class="glass-input dim">
+                    </div>
+                </div>
+                <div class="separator"></div>
+                <div class="input-row">
+                    <ion-icon name="location" class="icon-magenta"></ion-icon>
+                    <div class="input-col">
+                        <label>Куда</label>
+                        <input type="text" placeholder="Улица, заведение..." class="glass-input">
+                    </div>
+                </div>
+                <div class="separator"></div>
+                <div class="input-grid">
+                    <div class="input-col small">
+                        <label>Бюджет (₸)</label>
+                        <input type="number" placeholder="1000" class="glass-input num-font">
+                    </div>
+                    <div class="input-col">
+                        <label>Комментарий</label>
+                        <input type="text" placeholder="У 2 подъезда..." class="glass-input">
+                    </div>
+                </div>
+
+                <div class="car-selector">
+                    <div class="car-option selected" onclick="selectCar(this)">
+                        <div class="car-icon">🌱</div>
+                        <div class="car-name">Eco</div>
+                    </div>
+                    <div class="car-option" onclick="selectCar(this)">
+                        <div class="car-icon">🚖</div>
+                        <div class="car-name">Comfort</div>
+                    </div>
+                    <div class="car-option lux" onclick="selectCar(this)">
+                        <div class="car-icon">💎</div>
+                        <div class="car-name">Lux</div>
+                    </div>
+                </div>
+
+                <button class="main-btn">
+                    <span>Поехали</span>
+                    <ion-icon name="arrow-forward"></ion-icon>
                 </button>
             </div>
-        </header>
-
-        <main id="main-content">
             
-            <section id="tab-taxi" class="tab-screen active">
-                <div class="taxi-panel glass-panel">
-                    <div class="drag-handle"></div>
-                    <h2 class="panel-title">Куда едем?</h2>
-                    
-                    <div class="input-group">
-                        <div class="input-row">
-                            <ion-icon name="navigate-circle" class="icon-start"></ion-icon>
-                            <input type="text" value="Моё местоположение" readonly class="glass-input">
-                        </div>
-                        <div class="connector-line"></div>
-                        <div class="input-row">
-                            <ion-icon name="location" class="icon-end"></ion-icon>
-                            <input type="text" placeholder="Поиск места..." class="glass-input highlight">
+            <button class="ai-hold-btn" ontouchstart="startListening()" ontouchend="stopListening()">
+                <ion-icon name="mic"></ion-icon>
+            </button>
+        </section>
+
+        <section id="tab-map" class="screen">
+            <div id="google-map-container">
+                <div class="map-placeholder"></div>
+                
+                <button class="map-pin pin-promo" style="top: 40%; left: 30%;" onclick="openPin('burger')">
+                    <div class="pin-icon">🍔</div>
+                    <div class="pin-label">-20%</div>
+                </button>
+
+                <button class="map-pin pin-info" style="top: 60%; left: 70%;" onclick="openPin('cinema')">
+                    <div class="pin-icon">🎬</div>
+                    <div class="pin-label">Кино</div>
+                </button>
+            </div>
+        </section>
+
+        <section id="tab-social" class="screen">
+            <div class="feed-header">
+                <h2>Городской чат</h2>
+                <button class="btn-share" onclick="openShareModal()">
+                    <ion-icon name="share-outline"></ion-icon> Поделиться...
+                </button>
+            </div>
+            <div class="feed-list">
+                <div class="glass-card post">
+                    <div class="post-head">
+                        <div class="avatar-mini">K</div>
+                        <div class="post-meta">
+                            <span class="name">Кайрат</span>
+                            <span class="time">10 мин назад</span>
                         </div>
                     </div>
-
-                    <div class="car-selector">
-                        <div class="car-card glass-card selected" onclick="selectCar(this)">
-                            <div class="car-img">🚗</div>
-                            <div class="car-name">Eco</div>
-                            <div class="car-price">800₸</div>
-                        </div>
-                        <div class="car-card glass-card" onclick="selectCar(this)">
-                            <div class="car-img">🚙</div>
-                            <div class="car-name">Comfort</div>
-                            <div class="car-price">1200₸</div>
-                        </div>
-                        <div class="car-card glass-card" onclick="selectCar(this)">
-                            <div class="car-img">⚡</div>
-                            <div class="car-name">Tesla</div>
-                            <div class="car-price">2500₸</div>
-                        </div>
-                    </div>
-
-                    <button class="main-action-btn glow-btn">
-                        <span>Заказать такси</span>
-                        <ion-icon name="arrow-forward"></ion-icon>
-                    </button>
-                </div>
-            </section>
-
-            <section id="tab-social" class="tab-screen" style="display:none;">
-                <div class="feed-container">
-                    <div class="glass-card post">
-                        <div class="post-header">
-                            <div class="avatar small">A</div>
-                            <div class="post-info">
-                                <span class="p-name">Aria (AI)</span>
-                                <span class="p-time">2 мин назад</span>
-                            </div>
-                        </div>
-                        <div class="post-content">
-                            Пробки на проспекте Бухар-Жырау. Рекомендую объезд через Юго-Восток. Время экономии: 12 минут.
-                        </div>
-                    </div>
-                    
-                    <div class="glass-card post">
-                        <div class="post-header">
-                            <div class="avatar small user">K</div>
-                            <div class="post-info">
-                                <span class="p-name">Кайрат</span>
-                                <span class="p-time">5 мин назад</span>
-                            </div>
-                        </div>
-                        <div class="post-content">
-                            Кто потерял ключи у Сити Молла? Оставил на ресепшене.
-                        </div>
+                    <div class="post-body">
+                        На Абая пробка, объезжайте через Ерубаева!
                     </div>
                 </div>
-            </section>
-        </main>
+            </div>
+        </section>
 
-        <nav class="glass-dock">
-            <button class="dock-item active" onclick="switchTab('taxi')">
-                <ion-icon name="map"></ion-icon>
+        <section id="tab-wallet" class="screen">
+            <div class="wallet-card">
+                <div class="balance-label">Общий баланс</div>
+                <div class="balance-sum">45 200 ₸</div>
+                <div class="wallet-actions">
+                    <button class="w-btn"><ion-icon name="add"></ion-icon> Пополнить</button>
+                    <button class="w-btn"><ion-icon name="arrow-up"></ion-icon> Вывести</button>
+                    <button class="w-btn"><ion-icon name="swap-horizontal"></ion-icon> Перевод</button>
+                </div>
+            </div>
+            <div class="history-list">
+                <h3>История</h3>
+                <div class="history-item">
+                    <div class="h-icon down">↓</div>
+                    <div class="h-info">
+                        <span>Поездка (Eco)</span>
+                        <small>Сегодня, 14:20</small>
+                    </div>
+                    <div class="h-sum">-800 ₸</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-profile" class="screen">
+            <div class="driver-stats">
+                <div class="stat-box">
+                    <span class="s-val">4.98</span>
+                    <span class="s-label">Рейтинг</span>
+                </div>
+                <div class="stat-box">
+                    <span class="s-val">12</span>
+                    <span class="s-label">Заказов</span>
+                </div>
+            </div>
+
+            <button class="rent-btn" onclick="openRentModal()">
+                <ion-icon name="car-sport"></ion-icon>
+                <span>Rentauto</span>
+                <ion-icon name="chevron-forward"></ion-icon>
             </button>
-            <button class="dock-item" onclick="switchTab('social')">
-                <ion-icon name="people"></ion-icon>
-            </button>
-            <button class="dock-item ai-trigger" onclick="openAria()">
-                <div class="ai-orb"></div>
-            </button>
-            <button class="dock-item" onclick="switchTab('wallet')">
-                <ion-icon name="wallet"></ion-icon>
-            </button>
-            <button class="dock-item" onclick="switchTab('profile')">
-                <ion-icon name="person"></ion-icon>
-            </button>
-        </nav>
+
+            <h3 class="section-title">Активные заказы (Эфир)</h3>
+            <div class="orders-feed">
+                <div class="glass-card order-item">
+                    <div class="o-route">
+                        <span class="dot-a"></span> Ленина 15
+                        <span class="line"></span>
+                        <span class="dot-b"></span> Вокзал
+                    </div>
+                    <div class="o-price">1500 ₸</div>
+                    <button class="btn-accept">Взять заказ</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <nav class="glass-dock">
+        <button class="dock-item active" onclick="switchTab('home', this)">
+            <ion-icon name="apps"></ion-icon> </button>
+        <button class="dock-item" onclick="switchTab('map', this)">
+            <ion-icon name="map"></ion-icon> </button>
+        <button class="dock-item ai-central" onclick="switchTab('home', this)">
+             <div class="ai-dot"></div>
+        </button>
+        <button class="dock-item" onclick="switchTab('wallet', this)">
+            <ion-icon name="wallet"></ion-icon> </button>
+        <button class="dock-item" onclick="switchTab('profile', this)">
+            <ion-icon name="person"></ion-icon> </button>
+    </nav>
+
+    <div id="settings-sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>Настройки</h2>
+            <button class="close-btn" onclick="toggleSettings()">✕</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="user-edit">
+                <div class="avatar-large">R</div>
+                <input type="text" value="Rork" class="edit-input">
+                <input type="tel" value="+7 777 000 00 00" class="edit-input">
+            </div>
+
+            <div class="setting-group">
+                <label>Текущий город</label>
+                <select class="glass-select">
+                    <option>Karaganda</option>
+                    <option>Astana</option>
+                    <option>Almaty</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label>Оформление</label>
+                <button class="theme-btn">Выбрать фон из медиатеки</button>
+            </div>
+        </div>
     </div>
 
-    <input type="file" id="bg-uploader" accept="image/*" style="display: none;">
+    <div id="modal-pin" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button class="close-modal" onclick="closeModals()">✕</button>
+            <div class="promo-img">🍔</div>
+            <h2 id="modal-title">Burger King</h2>
+            <p>Скидка 20% на все меню при поездке через GTaX!</p>
+            <button class="main-btn">Забронировать</button>
+        </div>
+    </div>
+
+    <div id="modal-share" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h2>Новое сообщение</h2>
+            <textarea placeholder="Что происходит в городе?"></textarea>
+            <button class="btn-attach">📎 Фото/Видео</button>
+            <div class="row-btns">
+                <button class="btn-cancel" onclick="closeModals()">Отмена</button>
+                <button class="main-btn">Опубликовать</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
