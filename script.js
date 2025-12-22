@@ -1,76 +1,96 @@
 const tg = window.Telegram?.WebApp;
-
 if (tg) {
     tg.ready();
-    tg.expand(); // Разворачиваем на весь экран
-    tg.setHeaderColor("#000000"); // Черная шапка
+    tg.expand();
+    tg.setHeaderColor("#050505");
 }
 
-// === ЛОГИКА ТАБОВ ===
-function switchTab(tabName) {
+// === TABS LOGIC ===
+function switchTab(tabId, btnElement) {
     // 1. Скрываем все экраны
-    document.querySelectorAll('.tab-screen').forEach(screen => {
-        screen.style.display = 'none';
-        screen.classList.remove('active');
-    });
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    
+    // 2. Показываем нужный
+    document.getElementById('tab-' + tabId).classList.add('active');
+    
+    // 3. Работа с кнопками в Dock
+    if (btnElement) {
+        document.querySelectorAll('.dock-item').forEach(b => b.classList.remove('active'));
+        btnElement.classList.add('active');
+    }
 
-    // 2. Убираем активный класс с кнопок дока
-    document.querySelectorAll('.dock-item').forEach(btn => {
-        btn.classList.remove('active');
-    });
+    // 4. Фон карты vs Фон AI
+    const bgLayer = document.getElementById('bg-layer');
+    if (tabId === 'map') {
+        bgLayer.style.opacity = '0'; // Скрываем кибер-фон, показываем карту
+    } else {
+        bgLayer.style.opacity = '1';
+    }
+}
 
-    // 3. Показываем нужный
-    const targetScreen = document.getElementById('tab-' + tabName);
-    if (targetScreen) {
-        targetScreen.style.display = 'block';
-        // Небольшой таймаут для анимации, если нужно
-        setTimeout(() => targetScreen.classList.add('active'), 10);
+// === CAR SELECTION ===
+function selectCar(el) {
+    document.querySelectorAll('.car-option').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    if(tg) tg.HapticFeedback.selectionChanged();
+}
+
+// === SIDEBAR SETTINGS ===
+document.getElementById('open-settings').addEventListener('click', () => {
+    document.getElementById('settings-sidebar').classList.add('open');
+});
+function toggleSettings() {
+    document.getElementById('settings-sidebar').classList.remove('open');
+}
+
+// === MAP PINS & MODALS ===
+function openPin(type) {
+    const modal = document.getElementById('modal-pin');
+    const title = document.getElementById('modal-title');
+    
+    if (type === 'burger') {
+        title.innerText = 'Burger King';
+    } else if (type === 'cinema') {
+        title.innerText = 'Kinopark 5';
     }
     
-    // 4. Подсвечиваем кнопку (ищем по иконке или индексу, здесь упрощенно)
-    // В реальном проекте лучше добавить data-target атрибуты кнопкам
+    modal.classList.remove('hidden');
+    if(tg) tg.HapticFeedback.impactOccurred('light');
 }
 
-// === ВЫБОР АВТОМОБИЛЯ ===
-function selectCar(element) {
-    document.querySelectorAll('.car-card').forEach(card => card.classList.remove('selected'));
-    element.classList.add('selected');
+function closeModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+}
+
+// === SOCIAL SHARE ===
+function openShareModal() {
+    document.getElementById('modal-share').classList.remove('hidden');
+}
+
+// === DRIVER / RENT ===
+function openRentModal() {
+    alert("Модальное окно: Выбор авто для аренды (Rentauto System)");
+}
+
+// === AI VOICE MOCKUP ===
+function startListening() {
+    document.querySelector('.ai-hold-btn').style.transform = "translateX(-50%) scale(1.2)";
+    document.querySelector('.ai-hold-btn').style.borderColor = "#FFD700";
+    if(tg) tg.HapticFeedback.impactOccurred('heavy');
+}
+
+function stopListening() {
+    document.querySelector('.ai-hold-btn').style.transform = "translateX(-50%) scale(1)";
+    document.querySelector('.ai-hold-btn').style.borderColor = "rgba(255,255,255,0.2)";
     
-    if (tg) {
-        tg.HapticFeedback.selectionChanged(); // Вибрация при выборе
-    }
+    // Симуляция ответа ИИ
+    const bubble = document.querySelector('.ai-message');
+    bubble.innerText = "Слушаю... Маршрут до Майкудука построен. Стоимость ~1200₸. Едем?";
 }
-
-// === AI ARIA ===
-function openAria() {
-    if (tg) tg.HapticFeedback.impactOccurred('medium');
-    alert("Aria AI: Анализирую маршрут и погодные условия...");
-    // Здесь можно открыть модальное окно с чатом
-}
-
-// === СМЕНА ФОНА (ИЗ МЕДИАТЕКИ) ===
-document.getElementById('btn-settings').addEventListener('click', () => {
-    // Триггерим скрытый инпут файла
-    document.getElementById('bg-uploader').click();
-});
-
-document.getElementById('bg-uploader').addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            // Устанавливаем картинку как фон контейнера карты
-            const mapContainer = document.getElementById('map-container');
-            mapContainer.style.backgroundImage = `url(${e.target.result})`;
-            // Убираем сетку, если пользователь ставит фото, или оставляем для стиля
-            // mapContainer.innerHTML = ''; // Если нужно убрать сетку
-        };
-        reader.readAsDataURL(file);
-    }
-});
 
 // Инициализация
 document.addEventListener("DOMContentLoaded", () => {
-    // По умолчанию открыт таб такси
-    switchTab('taxi');
+    // Желтая кнопка на старте активна
+    const firstTabBtn = document.querySelector('.dock-item.active');
+    if(firstTabBtn) firstTabBtn.classList.add('active');
 });
