@@ -1,11 +1,12 @@
 :root {
-    --glass-bg: rgba(20, 20, 35, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.12);
-    --primary-neon: #00f2ff; /* Cyber Cyan */
-    --accent-neon: #bc13fe;  /* Cyber Purple */
+    --bg-dark: #050505;
+    --glass-bg: rgba(20, 20, 25, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --primary-yellow: #FFD700; /* ЖЕЛТЫЙ АКТИВНЫЙ */
+    --neon-blue: #00f2ff;
+    --neon-purple: #bc13fe;
     --text-main: #ffffff;
-    --text-muted: rgba(255, 255, 255, 0.6);
-    --blur-strength: 25px;
+    --text-muted: rgba(255, 255, 255, 0.5);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -13,265 +14,244 @@
 body {
     margin: 0;
     font-family: 'SF Pro Display', 'Inter', sans-serif;
-    background: #000;
+    background: var(--bg-dark);
     color: var(--text-main);
-    overflow: hidden; /* Чтобы карта не скроллилась вместе с UI */
+    overflow: hidden;
     height: 100vh;
 }
 
-/* ФОНОВАЯ КАРТА */
-#map-container {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
-    background-size: cover;
-    background-position: center;
-    z-index: 0;
+/* ФОНОВЫЕ СЛОИ */
+#bg-layer {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
+    transition: opacity 0.5s;
 }
 
-/* Сетка "ИИ" на карте */
+/* Сетка для режима AI */
 .ai-grid {
-    position: absolute;
-    inset: 0;
-    background-image: 
-        linear-gradient(rgba(0, 242, 255, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 242, 255, 0.1) 1px, transparent 1px);
-    background-size: 40px 40px;
-    perspective: 500px;
-    transform: perspective(500px) rotateX(20deg) scale(1.5);
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+    perspective: 1000px;
+    transform: perspective(500px) rotateX(20deg);
     opacity: 0.3;
-    animation: gridMove 20s linear infinite;
-}
-
-@keyframes gridMove {
-    0% { background-position: 0 0; }
-    100% { background-position: 0 40px; }
-}
-
-/* UI LAYER */
-.app-interface {
-    position: relative;
-    z-index: 10;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding-bottom: 90px; /* Место под Dock */
 }
 
 /* HEADER */
-.glass-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    padding-top: max(16px, env(safe-area-inset-top));
+.app-header {
+    padding: 60px 20px 20px; /* БОЛЬШОЙ ОТСТУП СВЕРХУ */
+    position: relative;
+    z-index: 10;
 }
 
-.profile-chip {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
-    padding: 6px 14px 6px 6px;
-    border-radius: 30px;
-    border: 1px solid var(--glass-border);
+.header-top { display: flex; justify-content: space-between; align-items: center; }
+.app-logo {
+    margin: 0; font-size: 28px; font-weight: 800; letter-spacing: 1px;
+    background: linear-gradient(45deg, #fff, var(--primary-yellow));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.btn-settings {
+    background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;
 }
 
-.avatar {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-neon), var(--accent-neon));
-    display: flex; align-items: center; justify-content: center;
-    font-weight: bold;
-    font-size: 14px;
+.header-sub { margin-top: 10px; }
+#current-city {
+    display: block; font-size: 32px; font-weight: 700; line-height: 1.1;
+}
+.weather-temp {
+    font-size: 18px; color: var(--text-muted); font-weight: 500;
 }
 
-.status-col {
-    display: flex; flex-direction: column;
-}
-
-.u-name { font-size: 13px; font-weight: 600; }
-.u-loc { font-size: 10px; color: var(--text-muted); }
-
-.glass-btn-icon {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    border: none;
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--blur-strength));
-    color: #fff;
-    font-size: 20px;
-    display: grid; place-items: center;
-    border: 1px solid var(--glass-border);
-    cursor: pointer;
-}
-
-/* MAIN CONTENT */
+/* MAIN SCREENS */
 #main-content {
-    flex: 1;
+    height: calc(100vh - 180px); /* Место под header и dock */
     position: relative;
     overflow-y: auto;
+    padding-bottom: 100px;
+}
+.screen { display: none; padding: 0 20px; animation: fadeIn 0.3s ease; }
+.screen.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- SCREEN 1: HOME / AI --- */
+.ai-bubble-container {
+    display: flex; gap: 15px; margin-bottom: 25px; align-items: flex-start;
+}
+.ai-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: grid; place-items: center;
+}
+.ai-core {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--neon-purple);
+    box-shadow: 0 0 10px var(--neon-purple);
+    animation: pulse 2s infinite;
+}
+.ai-message {
+    background: rgba(255,255,255,0.1);
+    padding: 12px 16px; border-radius: 0 16px 16px 16px;
+    font-size: 14px; line-height: 1.4;
+    border: 1px solid var(--glass-border);
 }
 
-/* TAXI PANEL (Bottom Sheet Style) */
-.taxi-panel {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    background: rgba(22, 22, 30, 0.85);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border-top: 1px solid rgba(255,255,255,0.2);
-    border-radius: 30px 30px 0 0;
+/* Order Form */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(25px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
     padding: 20px;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-    animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-
-@keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-}
-
-.drag-handle {
-    width: 40px; height: 4px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 2px;
-    margin: 0 auto 15px;
-}
-
-.panel-title { margin: 0 0 15px; font-size: 20px; font-weight: 700; }
-
-.input-group {
-    background: rgba(255,255,255,0.05);
-    border-radius: 16px;
-    padding: 4px;
-    margin-bottom: 20px;
-}
-
-.input-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 12px;
-}
-
+.input-row { display: flex; gap: 12px; align-items: center; padding: 8px 0; }
+.input-col { flex: 1; display: flex; flex-direction: column; }
+.input-col label { font-size: 10px; color: var(--text-muted); margin-bottom: 2px; text-transform: uppercase; }
 .glass-input {
-    background: transparent; border: none; outline: none;
-    color: #fff; width: 100%; font-size: 15px;
+    background: transparent; border: none; color: #fff;
+    font-size: 16px; width: 100%; outline: none; padding: 4px 0;
 }
-.glass-input::placeholder { color: rgba(255,255,255,0.4); }
+.glass-input.dim { color: rgba(255,255,255,0.6); }
+.num-font { font-family: monospace; letter-spacing: -0.5px; }
+.separator { height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0; }
+.input-grid { display: flex; gap: 15px; }
+.input-grid .small { flex: 0 0 35%; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 10px; }
 
-.connector-line {
-    height: 1px; background: rgba(255,255,255,0.1); margin: 0 40px;
-}
-
-.icon-start { color: var(--primary-neon); }
-.icon-end { color: var(--accent-neon); }
+.icon-yellow { color: var(--primary-yellow); }
+.icon-magenta { color: var(--neon-purple); }
 
 /* Car Selector */
-.car-selector {
-    display: flex; gap: 10px; overflow-x: auto;
-    padding-bottom: 5px; margin-bottom: 20px;
-    scrollbar-width: none;
+.car-selector { display: flex; gap: 10px; margin: 20px 0; }
+.car-option {
+    flex: 1; background: rgba(255,255,255,0.05);
+    border-radius: 16px; padding: 12px; text-align: center;
+    border: 1px solid transparent; transition: 0.2s;
 }
-.car-selector::-webkit-scrollbar { display: none; }
-
-.car-card {
-    min-width: 90px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 16px;
-    padding: 12px;
-    text-align: center;
-    border: 1px solid transparent;
-    transition: 0.3s;
+.car-option.selected {
+    background: rgba(255, 215, 0, 0.15); /* Yellow Tint */
+    border-color: var(--primary-yellow);
 }
-
-.car-card.selected {
-    background: rgba(0, 242, 255, 0.1);
-    border-color: var(--primary-neon);
-    box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
-}
-
-.car-img { font-size: 24px; margin-bottom: 6px; }
+.car-icon { font-size: 24px; margin-bottom: 5px; }
 .car-name { font-size: 12px; font-weight: 600; }
-.car-price { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.car-option.lux .car-name { color: #d4af37; } /* Gold text for Lux */
 
-/* Main Button */
-.main-action-btn {
-    width: 100%;
-    padding: 16px;
-    border-radius: 16px;
-    border: none;
-    background: linear-gradient(90deg, var(--primary-neon), #00aeff);
-    color: #000;
-    font-weight: 700;
-    font-size: 16px;
-    display: flex; justify-content: space-between; align-items: center;
-    box-shadow: 0 4px 20px rgba(0, 242, 255, 0.4);
-    cursor: pointer;
+.main-btn {
+    width: 100%; background: var(--primary-yellow); color: #000;
+    border: none; border-radius: 16px; padding: 16px;
+    font-size: 16px; font-weight: 700;
+    display: flex; justify-content: center; gap: 10px; align-items: center;
+    cursor: pointer; box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
 }
 
-/* FEED / SOCIAL */
-.feed-container { padding: 20px; padding-top: 60px; }
-.glass-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 16px;
-    margin-bottom: 12px;
-}
-.post-header { display: flex; gap: 10px; margin-bottom: 10px; }
-.avatar.small { width: 28px; height: 28px; font-size: 12px; }
-.post-info { display: flex; flex-direction: column; }
-.p-name { font-size: 13px; font-weight: 600; color: #fff; }
-.p-time { font-size: 10px; color: var(--text-muted); }
-.post-content { font-size: 13px; line-height: 1.4; color: rgba(255,255,255,0.9); }
-
-/* BOTTOM DOCK (Navigation) */
-.glass-dock {
-    position: fixed;
-    bottom: 20px; left: 50%; transform: translateX(-50%);
-    display: flex; align-items: center; gap: 8px;
-    background: rgba(20, 20, 20, 0.6);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid rgba(255,255,255,0.15);
-    padding: 8px 12px;
-    border-radius: 32px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    z-index: 100;
-}
-
-.dock-item {
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: rgba(255,255,255,0.5);
-    font-size: 22px;
+.ai-hold-btn {
+    position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
+    width: 60px; height: 60px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; font-size: 24px; backdrop-filter: blur(10px);
     display: flex; align-items: center; justify-content: center;
-    transition: 0.3s;
-    cursor: pointer;
 }
 
-.dock-item.active {
-    background: rgba(255,255,255,0.15);
-    color: #fff;
-    box-shadow: 0 0 15px rgba(255,255,255,0.1);
+/* --- SCREEN 2: MAP --- */
+#google-map-container {
+    height: 100%; width: 100%; border-radius: 24px; overflow: hidden;
+    position: relative;
+    background: #1a1a1a;
+}
+.map-placeholder {
+    width: 100%; height: 100%;
+    /* Заглушка, замени на iframe Google Maps */
+    background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Map_of_Karaganda.png/640px-Map_of_Karaganda.png') center/cover no-repeat;
+    opacity: 0.6; filter: grayscale(40%) invert(1);
 }
 
-/* AI Orb Button */
-.ai-trigger { width: 50px; height: 50px; position: relative; }
-.ai-orb {
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #fff, var(--accent-neon));
-    box-shadow: 0 0 15px var(--accent-neon), 0 0 30px var(--primary-neon);
-    animation: orbPulse 3s infinite ease-in-out;
+.map-pin {
+    position: absolute; transform: translate(-50%, -100%);
+    background: rgba(0,0,0,0.8); border: 1px solid var(--primary-yellow);
+    color: #fff; padding: 4px 8px; border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center;
+    cursor: pointer; animation: floatPin 3s infinite ease-in-out;
+}
+.pin-icon { font-size: 20px; }
+.pin-label { font-size: 10px; font-weight: bold; color: var(--primary-yellow); }
+
+@keyframes floatPin { 0%,100% {transform:translate(-50%,-100%);} 50% {transform:translate(-50%,-110%);} }
+
+/* --- SCREEN 4: WALLET --- */
+.wallet-card {
+    background: linear-gradient(135deg, #2c3e50, #000000);
+    border-radius: 24px; padding: 25px; border: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 20px;
+}
+.balance-label { font-size: 12px; color: var(--text-muted); }
+.balance-sum { font-size: 36px; font-weight: 700; margin: 5px 0 20px; }
+.wallet-actions { display: flex; gap: 10px; }
+.w-btn {
+    flex: 1; background: rgba(255,255,255,0.15); border: none; color: #fff;
+    padding: 10px; border-radius: 12px; font-size: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
 }
 
-@keyframes orbPulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
+/* --- SCREEN 5: PROFILE --- */
+.rent-btn {
+    width: 100%; padding: 15px; background: #222; border-radius: 16px;
+    border: 1px solid #333; color: #fff; display: flex; align-items: center; gap: 15px;
+    font-size: 16px; margin-bottom: 30px;
+}
+.rent-btn ion-icon:last-child { margin-left: auto; }
+.driver-stats { display: flex; gap: 15px; margin-bottom: 20px; }
+.stat-box {
+    flex: 1; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 16px;
+}
+.s-val { display: block; font-size: 24px; font-weight: 700; color: var(--primary-yellow); }
+.s-label { font-size: 12px; color: var(--text-muted); }
+
+/* SIDEBAR */
+.sidebar {
+    position: fixed; top: 0; right: -100%; width: 85%; height: 100%;
+    background: #111; z-index: 200; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 1px solid #333; padding: 20px;
+}
+.sidebar.open { right: 0; }
+.sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.user-edit { text-align: center; margin-bottom: 30px; }
+.avatar-large {
+    width: 80px; height: 80px; background: #333; border-radius: 50%;
+    margin: 0 auto 15px; display: grid; place-items: center; font-size: 30px;
+}
+.edit-input {
+    background: transparent; border: 1px solid #333; color: #fff;
+    padding: 10px; border-radius: 8px; width: 100%; margin-bottom: 10px; text-align: center;
+}
+
+/* DOCK */
+.glass-dock {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(20px);
+    border-radius: 35px; padding: 10px 20px; display: flex; gap: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 100;
+}
+.dock-item {
+    background: transparent; border: none; font-size: 24px; color: rgba(255,255,255,0.4);
+    transition: 0.3s; padding: 10px; border-radius: 50%;
+}
+.dock-item.active { color: var(--primary-yellow); transform: translateY(-5px); }
+.dock-item.ai-central .ai-dot {
+    width: 12px; height: 12px; background: var(--neon-purple); border-radius: 50%;
+    box-shadow: 0 0 15px var(--neon-purple);
+}
+
+/* MODALS */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 300;
+    display: grid; place-items: center; padding: 20px;
+}
+.modal-overlay.hidden { display: none; }
+.modal-card {
+    background: #1e1e24; width: 100%; max-width: 350px; border-radius: 24px;
+    padding: 24px; text-align: center; position: relative;
+    border: 1px solid #333;
+}
+.close-modal {
+    position: absolute; top: 15px; right: 15px; background: none; border: none; color: #fff; font-size: 18px;
 }
