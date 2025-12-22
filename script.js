@@ -1,41 +1,76 @@
-// Инициализация Telegram WebApp
 const tg = window.Telegram?.WebApp;
 
 if (tg) {
     tg.ready();
-    // Можешь настроить цвета шапки Telegram
-    tg.setHeaderColor("secondary_bg_color");
+    tg.expand(); // Разворачиваем на весь экран
+    tg.setHeaderColor("#000000"); // Черная шапка
 }
 
-// Примеры действий по клику (пока просто отправляем, куда нажали)
-function sendAction(action) {
-    if (!tg) return;
-    tg.sendData(JSON.stringify({ action }));
+// === ЛОГИКА ТАБОВ ===
+function switchTab(tabName) {
+    // 1. Скрываем все экраны
+    document.querySelectorAll('.tab-screen').forEach(screen => {
+        screen.style.display = 'none';
+        screen.classList.remove('active');
+    });
+
+    // 2. Убираем активный класс с кнопок дока
+    document.querySelectorAll('.dock-item').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // 3. Показываем нужный
+    const targetScreen = document.getElementById('tab-' + tabName);
+    if (targetScreen) {
+        targetScreen.style.display = 'block';
+        // Небольшой таймаут для анимации, если нужно
+        setTimeout(() => targetScreen.classList.add('active'), 10);
+    }
+    
+    // 4. Подсвечиваем кнопку (ищем по иконке или индексу, здесь упрощенно)
+    // В реальном проекте лучше добавить data-target атрибуты кнопкам
 }
 
-// Привязываем события — опционально
+// === ВЫБОР АВТОМОБИЛЯ ===
+function selectCar(element) {
+    document.querySelectorAll('.car-card').forEach(card => card.classList.remove('selected'));
+    element.classList.add('selected');
+    
+    if (tg) {
+        tg.HapticFeedback.selectionChanged(); // Вибрация при выборе
+    }
+}
+
+// === AI ARIA ===
+function openAria() {
+    if (tg) tg.HapticFeedback.impactOccurred('medium');
+    alert("Aria AI: Анализирую маршрут и погодные условия...");
+    // Здесь можно открыть модальное окно с чатом
+}
+
+// === СМЕНА ФОНА (ИЗ МЕДИАТЕКИ) ===
+document.getElementById('btn-settings').addEventListener('click', () => {
+    // Триггерим скрытый инпут файла
+    document.getElementById('bg-uploader').click();
+});
+
+document.getElementById('bg-uploader').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Устанавливаем картинку как фон контейнера карты
+            const mapContainer = document.getElementById('map-container');
+            mapContainer.style.backgroundImage = `url(${e.target.result})`;
+            // Убираем сетку, если пользователь ставит фото, или оставляем для стиля
+            // mapContainer.innerHTML = ''; // Если нужно убрать сетку
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Инициализация
 document.addEventListener("DOMContentLoaded", () => {
-    const ariaCard = document.querySelector(".card-aria");
-    const orderCard = document.querySelector(".card-slider");
-    const cityCard = document.querySelector(".card-city");
-
-    ariaCard.addEventListener("click", () => sendAction("chat_with_aria"));
-    orderCard.addEventListener("click", () => sendAction("create_order"));
-    cityCard.addEventListener("click", () => sendAction("city_chat"));
-
-    document.querySelectorAll(".small-card").forEach((card) => {
-        card.addEventListener("click", () =>
-            sendAction(card.querySelector(".small-title").textContent.trim())
-        );
-    });
-
-    // Переключение табов (пока визуально)
-    const navItems = document.querySelectorAll(".nav-item");
-    navItems.forEach((item) => {
-        item.addEventListener("click", () => {
-            navItems.forEach((i) => i.classList.remove("active"));
-            item.classList.add("active");
-            sendAction("tab_" + item.querySelector(".nav-label").textContent.trim());
-        });
-    });
+    // По умолчанию открыт таб такси
+    switchTab('taxi');
 });
