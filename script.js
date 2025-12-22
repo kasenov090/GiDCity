@@ -3,6 +3,8 @@ if (tg) {
     tg.ready();
     tg.expand();
     tg.setHeaderColor('#000000');
+    // Включаем подтверждение закрытия, чтобы случайно не выйти
+    tg.enableClosingConfirmation();
 }
 
 // === УПРАВЛЕНИЕ ВКЛАДКАМИ ===
@@ -10,13 +12,14 @@ function goTab(id, btn) {
     // 1. Скрываем все экраны
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     // 2. Показываем нужный
-    document.getElementById('screen-' + id).classList.add('active');
+    const targetScreen = document.getElementById('screen-' + id);
+    if (targetScreen) targetScreen.classList.add('active');
     
-    // 3. Подсветка кнопок
+    // 3. Подсветка кнопок в доке
     document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
     if(btn) btn.classList.add('active');
 
-    // 4. Снимаем подсветку с центральной, если ушли с главной
+    // 4. Логика центральной кнопки AI
     const aiBtn = document.getElementById('ai-main-btn');
     if (id === 'home') {
         aiBtn.classList.add('active-mode');
@@ -24,11 +27,11 @@ function goTab(id, btn) {
         aiBtn.classList.remove('active-mode');
     }
 
-    // 5. Убираем фон для Карты, чтобы она была яркой
+    // 5. Управление фоновой сеткой (скрываем на карте для четкости)
     const bg = document.getElementById('background-layer');
-    bg.style.display = (id === 'map') ? 'none' : 'block';
+    if (bg) bg.style.opacity = (id === 'map') ? '0' : '1';
 
-    // Haptic
+    // Вибрация при переключении
     if(tg) tg.HapticFeedback.selectionChanged();
 }
 
@@ -37,107 +40,113 @@ const aiBtn = document.getElementById('ai-main-btn');
 let pressTimer;
 let isLongPress = false;
 
-// Начало нажатия
 aiBtn.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // Чтобы не было зума
     isLongPress = false;
+    aiBtn.style.transform = "scale(0.9) translateY(-15px)"; // Учитываем вылет кнопки вверх
     
-    // Анимация нажатия
-    aiBtn.style.transform = "scale(0.9)";
-    aiBtn.style.borderColor = "#0a84ff"; 
-    
-    // Таймер на удержание (500мс)
     pressTimer = setTimeout(() => {
         isLongPress = true;
         if(tg) tg.HapticFeedback.impactOccurred('heavy');
-        // Визуальный эффект "Слушаю"
-        aiBtn.style.boxShadow = "0 0 30px #0a84ff";
-        aiBtn.style.borderColor = "#0a84ff";
-    }, 500);
+        aiBtn.classList.add('listening'); // Нужно добавить в CSS для анимации пульсации
+    }, 600);
 });
 
-// Конец нажатия
 aiBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
     clearTimeout(pressTimer);
-    
-    // Сброс стиля
-    aiBtn.style.transform = "scale(1)";
-    aiBtn.style.borderColor = "rgba(255,255,255,0.1)";
-    aiBtn.style.boxShadow = "0 8px 25px rgba(0,0,0,0.5)";
+    aiBtn.style.transform = ""; 
+    aiBtn.classList.remove('listening');
 
     if (isLongPress) {
-        // --- БЫЛО УДЕРЖАНИЕ (ГОЛОСОВОЙ ВВОД) ---
         handleVoiceCommand();
     } else {
-        // --- БЫЛ ПРОСТОЙ КЛИК (ПЕРЕХОД НА ГЛАВНУЮ) ---
         goTab('home', null);
     }
 });
 
-// Имитация ответа ИИ
+// Имитация ИИ
 function handleVoiceCommand() {
-    // Если мы не на экране Home, переходим туда
-    const homeScreen = document.getElementById('screen-home');
-    if (!homeScreen.classList.contains('active')) {
+    if (!document.getElementById('screen-home').classList.contains('active')) {
         goTab('home', null);
     }
 
     const chat = document.querySelector('.chat-container');
     
-    // Добавляем сообщение
-    chat.innerHTML += `
-        <div class="ai-msg">
-            <div class="ai-avatar">Ai</div>
-            <div class="msg-bubble">Принято: ЖД Вокзал. Бюджет 1000₸.</div>
-        </div>`;
-    chat.scrollTop = chat.scrollHeight; // Автоскролл вниз
+    // Псевдо-распознавание
+    setTimeout(() => {
+        chat.innerHTML += `
+            <div class="ai-msg">
+                <div class="ai-avatar">Ai</div>
+                <div class="msg-bubble">Поняла! Прокладываю маршрут до <b>City Mall</b>. Погода сегодня холодная, учитываю это в поиске машин.</div>
+            </div>`;
+        chat.scrollTop = chat.scrollHeight;
 
-    // Заполняем поля
-    document.getElementById('inp-dest').value = "ЖД Вокзал";
-    document.getElementById('inp-price').value = "1000";
-    
-    if(tg) tg.HapticFeedback.notificationOccurred('success');
+        // Заполняем поля автоматически
+        const destInput = document.getElementById('inp-dest');
+        const priceInput = document.getElementById('inp-price');
+        
+        if(destInput) destInput.value = "City Mall";
+        if(priceInput) priceInput.placeholder = "Предложите (1200₸?)"; // AI подсказывает цену
+        
+        if(tg) tg.HapticFeedback.notificationOccurred('success');
+    }, 400);
 }
 
-// === ОСТАЛЬНОЕ ===
-
-// Выбор тарифа
+// === ТАРИФЫ (УБРАЛИ ЦЕНЫ) ===
 function setTariff(el) {
     document.querySelectorAll('.tariff').forEach(t => t.classList.remove('selected'));
     el.classList.add('selected');
+    
+    // При выборе тарифа можно менять плейсхолдер цены
+    const priceInp = document.getElementById('inp-price');
+    if (el.innerText.includes('Lux')) {
+        priceInp.placeholder = "Предложите от 2000";
+    } else {
+        priceInp.placeholder = "Предложите";
+    }
+
     if(tg) tg.HapticFeedback.selectionChanged();
 }
 
-// Модальные окна
+// === МОДАЛЬНЫЕ ОКНА ===
 const overlay = document.getElementById('modal-overlay');
+
 function openModal(id) {
-    // Скрываем все открытые карточки
     document.querySelectorAll('.modal-card').forEach(c => c.classList.remove('active'));
-    // Показываем оверлей
     overlay.classList.remove('hidden');
-    // Показываем конкретную карточку
     const target = document.getElementById(id);
     if(target) target.classList.add('active');
-    
+    if(tg) tg.HapticFeedback.impactOccurred('medium');
+}
+
+// Закрытие по клику на крестик или оверлей
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('close-m') || e.target === overlay) {
+        overlay.classList.add('hidden');
+    }
+});
+
+// === САЙДБАР (НАСТРОЙКИ) ===
+const sidebar = document.getElementById('sidebar-settings');
+
+function openSidebar() {
+    sidebar.classList.add('open');
     if(tg) tg.HapticFeedback.impactOccurred('light');
 }
 
-// Закрытие
-document.querySelectorAll('.close-m').forEach(b => {
-    b.addEventListener('click', () => overlay.classList.add('hidden'));
-});
-overlay.addEventListener('click', (e) => {
-    if(e.target === overlay) overlay.classList.add('hidden');
-});
+function closeSidebar() {
+    sidebar.classList.remove('open');
+}
 
-// Сайдбар настроек
-const sidebar = document.getElementById('sidebar-settings');
-document.getElementById('btn-settings').addEventListener('click', () => sidebar.classList.add('open'));
-function closeSidebar() { sidebar.classList.remove('open'); }
-
-// Инициализация
+// === ИНИЦИАЛИЗАЦИЯ ===
 document.addEventListener('DOMContentLoaded', () => {
-    // Центральная кнопка активна по умолчанию
-    aiBtn.classList.add('active-mode');
+    // Установка активного состояния главной кнопки
+    const aiBtn = document.getElementById('ai-main-btn');
+    if(aiBtn) aiBtn.classList.add('active-mode');
+
+    // Если есть карта, обновляем её высоту
+    const mapFrame = document.getElementById('map-frame');
+    if(mapFrame) {
+        // Здесь можно вставить реальную ссылку на карту
+        // mapFrame.src = "URL"; 
+    }
 });
