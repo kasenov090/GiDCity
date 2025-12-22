@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Aitax SuperApp</title>
-    
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -84,7 +83,7 @@
                     <button class="tariff" onclick="setTariff(this)">Comf</button>
                     <button class="tariff" onclick="setTariff(this)">Lux</button>
                 </div>
-                <button class="btn-go glow-anim">Поехали</button>
+                <button class="btn-go glow-anim" onclick="createOrder()">Поехали</button>
             </div>
         </section>
 
@@ -100,39 +99,43 @@
             </div>
              <div class="history-list custom-scroll">
                 <h3 class="section-title">История</h3>
-                <div class="h-item glass-effect">
-                    <div class="icon-box"><ion-icon name="car-sport"></ion-icon></div>
-                    <div class="h-data"><span>Поездка Aitax</span><small>Сегодня, 14:00</small></div>
-                    <div class="h-sum">-800 ₸</div>
+                <div class="card-item glass-morphism">
+                    <div class="icon-box red"><ion-icon name="car-sport"></ion-icon></div>
+                    <div class="card-data"><span>Поездка Aitax</span><small>Сегодня, 14:00</small></div>
+                    <div class="card-sum red">-800 ₸</div>
+                </div>
+                <div class="card-item glass-morphism">
+                    <div class="icon-box green"><ion-icon name="add"></ion-icon></div>
+                    <div class="card-data"><span>Пополнение</span><small>Вчера, 18:20</small></div>
+                    <div class="card-sum green">+5000 ₸</div>
                 </div>
             </div>
         </section>
 
         <section id="screen-profile" class="view">
             <div class="driver-block glass-morphism">
-                <div class="driver-avatar-icon glass-effect">
-                    <ion-icon name="person"></ion-icon>
-                </div>
+                <div class="driver-avatar-icon glass-effect"><ion-icon name="person"></ion-icon></div>
                 <h2 class="driver-name">Елназар Касенов</h2>
-                <div class="car-details">
-                    <span class="car-name">Toyota Camry 70</span>
-                    <span class="car-year">2021, Белый</span>
-                </div>
-                 <div class="kz-number">
-                    <span class="kz-flag">🇰🇿</span> 777 ANB 09
-                </div>
+                <div class="car-details"><span class="car-name">Toyota Camry 70</span><span class="car-year">2021, Белый</span></div>
+                 <div class="kz-number"><span class="kz-flag">🇰🇿</span> 777 ANB 09</div>
             </div>
 
-            <div class="profile-head">
-                <div class="stat glass-effect"><span>4.98</span><small>Рейтинг</small></div>
-                <div class="stat glass-effect"><span>124</span><small>Поездки</small></div>
+            <div class="profile-stats-row">
+                <div class="card-item glass-morphism stat-card">
+                    <div class="stat-val">4.98 <ion-icon name="star" style="color: gold; font-size: 16px;"></ion-icon></div>
+                    <small>Рейтинг</small>
+                </div>
+                <div class="card-item glass-morphism stat-card">
+                    <div class="stat-val">124</div>
+                    <small>Поездки</small>
+                </div>
             </div>
 
              <h3 class="section-title" style="padding: 0 20px; margin-top: 20px;">Эфир заказов</h3>
-            <div class="orders-list custom-scroll">
+            <div class="orders-list custom-scroll" id="ether-container">
                 <div class="order-strip glass-morphism">
                     <div class="route-info">
-                        <div class="route-line"><span class="dot a"></span> Гоголя 34</div>
+                        <div class="route-line"><span class="dot a"></span> Моё местоположение</div>
                         <div class="route-arrow">↓</div>
                         <div class="route-line"><span class="dot b"></span> Майкудук</div>
                     </div>
@@ -155,21 +158,20 @@
 
     <div id="modal-overlay" class="modal-overlay hidden">
         
+        <div id="modal-searching" class="modal-card center-text">
+            <div class="radar-anim">
+                <div class="radar-wave"></div>
+                <div class="radar-wave"></div>
+                <ion-icon name="car-sport" class="radar-icon"></ion-icon>
+            </div>
+            <h3>Ищем водителя...</h3>
+            <p style="color: #aaa; margin-top: 10px;">Предлагаем ваш заказ ближайшим машинам</p>
+            <button class="btn-full gray" onclick="cancelOrder()" style="margin-top: 25px;">Отменить</button>
+        </div>
+
         <div id="modal-profile-edit" class="modal-card">
             <div class="m-head"><h3>Мои данные</h3><button class="close-m">✕</button></div>
-            <div class="input-group-modal">
-                <label>ФИО</label>
-                <input type="text" class="modal-inp" value="Елназар Касенов">
-            </div>
-            <div class="input-group-modal">
-                <label>Телефон</label>
-                <input type="text" class="modal-inp" value="+7 777 123 45 67">
-            </div>
-            <div class="input-group-modal">
-                <label>Автомобиль</label>
-                <input type="text" class="modal-inp" value="Toyota Camry 70">
-            </div>
-            <button class="btn-att-photo"><ion-icon name="camera"></ion-icon> Сменить фото</button>
+            <div class="input-group-modal"><label>ФИО</label><input type="text" class="modal-inp" value="Елназар Касенов"></div>
             <button class="btn-full">Сохранить</button>
         </div>
 
@@ -179,44 +181,32 @@
                 <div class="city-item" onclick="selectCity('Karaganda', '-2°C ❄️')">Karaganda</div>
                 <div class="city-item" onclick="selectCity('Astana', '-15°C 🌬️')">Astana</div>
                 <div class="city-item" onclick="selectCity('Almaty', '+5°C ☀️')">Almaty</div>
-                <div class="city-item" onclick="selectCity('Shymkent', '+12°C ☀️')">Shymkent</div>
-                <div class="city-item" onclick="selectCity('Aktobe', '-5°C ☁️')">Aktobe</div>
             </div>
         </div>
 
         <div id="modal-theme" class="modal-card center-text">
             <div class="m-head"><h3>Тема оформления</h3><button class="close-m">✕</button></div>
-            <p style="margin-bottom: 15px; color: #aaa;">Выберите акцентный цвет:</p>
             <div class="theme-grid">
                 <button class="theme-btn" style="background: #0a84ff;" onclick="setTheme('#0a84ff')"></button>
                 <button class="theme-btn" style="background: #FFD700;" onclick="setTheme('#FFD700')"></button>
                 <button class="theme-btn" style="background: #ff2d55;" onclick="setTheme('#ff2d55')"></button>
-                <button class="theme-btn" style="background: #bf5af2;" onclick="setTheme('#bf5af2')"></button>
-                <button class="theme-btn" style="background: #30d158;" onclick="setTheme('#30d158')"></button>
-                <button class="theme-btn" style="background: #ff9f0a;" onclick="setTheme('#ff9f0a')"></button>
             </div>
         </div>
-
-        <div id="modal-pay" class="modal-card">
+         <div id="modal-pay" class="modal-card">
             <div class="m-head"><h3>Пополнение</h3><button class="close-m">✕</button></div>
             <input type="number" class="modal-inp" placeholder="Сумма (₸)">
             <button class="btn-full">Оплатить</button>
         </div>
         <div id="modal-out" class="modal-card"><div class="m-head"><h3>Вывод</h3><button class="close-m">✕</button></div></div>
         <div id="modal-send" class="modal-card"><div class="m-head"><h3>Перевод</h3><button class="close-m">✕</button></div></div>
-        <div id="promo-burger" class="modal-card center-text">
-             <div class="m-head"><h3>Burger King</h3><button class="close-m">✕</button></div>
-             <div class="big-emoji">🍔</div><p>Скидка 20%!</p>
-        </div>
     </div>
     
     <div id="sidebar-settings" class="sidebar">
          <div class="sidebar-head"><h2>Настройки</h2><button class="close-side" onclick="closeSidebar()">✕</button></div>
          <div class="set-list">
-            <div class="set-item" onclick="openModal('modal-profile-edit')"><ion-icon name="person-circle-outline"></ion-icon> Профиль (Данные)</div>
+            <div class="set-item" onclick="openModal('modal-profile-edit')"><ion-icon name="person-circle-outline"></ion-icon> Профиль</div>
             <div class="set-item" onclick="openModal('modal-city')"><ion-icon name="globe-outline"></ion-icon> Город</div>
             <div class="set-item" onclick="openModal('modal-theme')"><ion-icon name="color-palette-outline"></ion-icon> Оформление</div>
-            <div class="set-item"><ion-icon name="help-circle-outline"></ion-icon> Поддержка</div>
         </div>
     </div>
 
