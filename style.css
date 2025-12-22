@@ -1,301 +1,277 @@
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
+:root {
+    --glass-bg: rgba(20, 20, 35, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --primary-neon: #00f2ff; /* Cyber Cyan */
+    --accent-neon: #bc13fe;  /* Cyber Purple */
+    --text-main: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.6);
+    --blur-strength: 25px;
 }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
     margin: 0;
-    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: radial-gradient(circle at top, #26114b 0, #050417 40%, #02000b 100%);
-    color: #fff;
+    font-family: 'SF Pro Display', 'Inter', sans-serif;
+    background: #000;
+    color: var(--text-main);
+    overflow: hidden; /* Чтобы карта не скроллилась вместе с UI */
+    height: 100vh;
 }
 
-/* Контейнер приложения (макс ширина под телефон) */
-.app {
-    max-width: 480px;
-    margin: 0 auto;
-    min-height: 100vh;
-    padding: 16px 16px 32px;
-    position: relative;
-}
-
-/* Лёгкие "звезды" на фоне */
-body::before {
-    content: "";
+/* ФОНОВАЯ КАРТА */
+#map-container {
     position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background-image:
-        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.35) 0, transparent 60%),
-        radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3) 0, transparent 60%),
-        radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,0.25) 0, transparent 60%),
-        radial-gradient(1px 1px at 60% 60%, rgba(255,255,255,0.2) 0, transparent 60%);
-    opacity: 0.4;
-    z-index: -1;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
 }
 
-/* TOP BAR */
-.top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
-    margin-top: 8px;
-}
-
-.logo-block {
-    display: flex;
-    flex-direction: column;
-}
-
-.logo-text {
-    font-weight: 700;
-    font-size: 24px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #f7b2ff;
-    text-shadow: 0 0 14px rgba(255, 144, 255, 0.9);
-}
-
-.logo-sub {
-    font-size: 12px;
-    opacity: 0.8;
-}
-
-.top-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.chip {
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(0, 0, 0, 0.3);
-    color: #fff;
-    padding: 4px 10px;
-    font-size: 12px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.chip-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-    background: #d0ffd0;
-    box-shadow: 0 0 6px #86ff86;
-}
-
-.icon-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 999px;
-    border: none;
-    background: rgba(0, 0, 0, 0.35);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    cursor: pointer;
-    color: #fff;
-}
-
-/* DATE ROW */
-.date-row {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 8px;
-}
-
-.date-chip {
-    border-radius: 20px;
-    border: none;
-    padding: 6px 14px;
-    background: rgba(0, 0, 0, 0.45);
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-}
-
-.icon-calendar {
-    font-size: 15px;
-}
-
-/* CONTENT */
-.content {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding-top: 4px;
-    padding-bottom: 72px; /* под нижнюю навигацию */
-}
-
-/* CARDS */
-.card {
-    border-radius: 24px;
-    background: rgba(8, 6, 26, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    position: relative;
-    overflow: hidden;
-}
-
-.card-big {
-    padding-block: 18px;
-}
-
-.card-aria {
-    background: radial-gradient(circle at top left, #ff5ce1 0, #9b4fff 40%, #2b104b 100%);
-}
-
-.card-city {
-    background: radial-gradient(circle at top left, #53b2ff 0, #2767ff 35%, #081a3b 100%);
-}
-
-.card-icon-wrap {
-    flex-shrink: 0;
-}
-
-.card-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.25);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-}
-
-.card-text {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.card-title {
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.card-sub {
-    font-size: 13px;
-    opacity: 0.9;
-}
-
-/* Слайдер ЗАКАЗ */
-.card-slider {
-    background: rgba(13, 10, 40, 0.9);
-}
-
-.dots {
+/* Сетка "ИИ" на карте */
+.ai-grid {
     position: absolute;
-    right: 16px;
-    bottom: 12px;
+    inset: 0;
+    background-image: 
+        linear-gradient(rgba(0, 242, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 242, 255, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    perspective: 500px;
+    transform: perspective(500px) rotateX(20deg) scale(1.5);
+    opacity: 0.3;
+    animation: gridMove 20s linear infinite;
+}
+
+@keyframes gridMove {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 40px; }
+}
+
+/* UI LAYER */
+.app-interface {
+    position: relative;
+    z-index: 10;
+    height: 100%;
     display: flex;
-    gap: 4px;
-}
-
-.dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.3);
-}
-.dot.active {
-    width: 10px;
-    background: #f6c94a;
-}
-
-/* SMALL CARDS */
-.small-cards {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-}
-
-.small-card {
     flex-direction: column;
-    align-items: flex-start;
-    padding: 12px 12px 10px;
-    background: rgba(10, 7, 35, 0.95);
-    cursor: pointer;
+    justify-content: space-between;
+    padding-bottom: 90px; /* Место под Dock */
 }
 
-.small-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 17px;
-}
-
-.small-title {
-    margin-top: 8px;
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.small-sub {
-    font-size: 11px;
-    opacity: 0.7;
-}
-
-/* BOTTOM NAV */
-.bottom-nav {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 8px;
-    width: 100%;
-    max-width: 480px;
-    padding: 8px 20px 10px;
+/* HEADER */
+.glass-header {
     display: flex;
     justify-content: space-between;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-    backdrop-filter: blur(20px);
+    align-items: center;
+    padding: 16px 20px;
+    padding-top: max(16px, env(safe-area-inset-top));
 }
 
-.nav-item {
-    flex: 1;
+.profile-chip {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 2px;
-    background: none;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    padding: 6px 14px 6px 6px;
+    border-radius: 30px;
+    border: 1px solid var(--glass-border);
+}
+
+.avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-neon), var(--accent-neon));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.status-col {
+    display: flex; flex-direction: column;
+}
+
+.u-name { font-size: 13px; font-weight: 600; }
+.u-loc { font-size: 10px; color: var(--text-muted); }
+
+.glass-btn-icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
     border: none;
-    color: #aaa5ff;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-strength));
+    color: #fff;
+    font-size: 20px;
+    display: grid; place-items: center;
+    border: 1px solid var(--glass-border);
     cursor: pointer;
 }
 
-.nav-icon {
-    font-size: 18px;
+/* MAIN CONTENT */
+#main-content {
+    flex: 1;
+    position: relative;
+    overflow-y: auto;
 }
 
-.nav-item.active .nav-label {
-    color: #ffd84d;
-    font-weight: 600;
-}
-.nav-item.active .nav-icon {
-    filter: drop-shadow(0 0 4px rgba(255, 216, 77, 0.7));
+/* TAXI PANEL (Bottom Sheet Style) */
+.taxi-panel {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(22, 22, 30, 0.85);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-top: 1px solid rgba(255,255,255,0.2);
+    border-radius: 30px 30px 0 0;
+    padding: 20px;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+    animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Адаптивность */
-@media (max-width: 360px) {
-    .logo-text {
-        font-size: 20px;
-    }
-    .card-title {
-        font-size: 16px;
-    }
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.drag-handle {
+    width: 40px; height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    margin: 0 auto 15px;
+}
+
+.panel-title { margin: 0 0 15px; font-size: 20px; font-weight: 700; }
+
+.input-group {
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 4px;
+    margin-bottom: 20px;
+}
+
+.input-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+}
+
+.glass-input {
+    background: transparent; border: none; outline: none;
+    color: #fff; width: 100%; font-size: 15px;
+}
+.glass-input::placeholder { color: rgba(255,255,255,0.4); }
+
+.connector-line {
+    height: 1px; background: rgba(255,255,255,0.1); margin: 0 40px;
+}
+
+.icon-start { color: var(--primary-neon); }
+.icon-end { color: var(--accent-neon); }
+
+/* Car Selector */
+.car-selector {
+    display: flex; gap: 10px; overflow-x: auto;
+    padding-bottom: 5px; margin-bottom: 20px;
+    scrollbar-width: none;
+}
+.car-selector::-webkit-scrollbar { display: none; }
+
+.car-card {
+    min-width: 90px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid transparent;
+    transition: 0.3s;
+}
+
+.car-card.selected {
+    background: rgba(0, 242, 255, 0.1);
+    border-color: var(--primary-neon);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+}
+
+.car-img { font-size: 24px; margin-bottom: 6px; }
+.car-name { font-size: 12px; font-weight: 600; }
+.car-price { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Main Button */
+.main-action-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(90deg, var(--primary-neon), #00aeff);
+    color: #000;
+    font-weight: 700;
+    font-size: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 4px 20px rgba(0, 242, 255, 0.4);
+    cursor: pointer;
+}
+
+/* FEED / SOCIAL */
+.feed-container { padding: 20px; padding-top: 60px; }
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+.post-header { display: flex; gap: 10px; margin-bottom: 10px; }
+.avatar.small { width: 28px; height: 28px; font-size: 12px; }
+.post-info { display: flex; flex-direction: column; }
+.p-name { font-size: 13px; font-weight: 600; color: #fff; }
+.p-time { font-size: 10px; color: var(--text-muted); }
+.post-content { font-size: 13px; line-height: 1.4; color: rgba(255,255,255,0.9); }
+
+/* BOTTOM DOCK (Navigation) */
+.glass-dock {
+    position: fixed;
+    bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(20, 20, 20, 0.6);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 8px 12px;
+    border-radius: 32px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    z-index: 100;
+}
+
+.dock-item {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.dock-item.active {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(255,255,255,0.1);
+}
+
+/* AI Orb Button */
+.ai-trigger { width: 50px; height: 50px; position: relative; }
+.ai-orb {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #fff, var(--accent-neon));
+    box-shadow: 0 0 15px var(--accent-neon), 0 0 30px var(--primary-neon);
+    animation: orbPulse 3s infinite ease-in-out;
+}
+
+@keyframes orbPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
 }
