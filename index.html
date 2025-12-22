@@ -7,7 +7,11 @@
     
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -17,15 +21,11 @@
 
     <header class="top-bar">
         <div class="status-row">
-            <span class="city">Karaganda</span>
-            <span class="divider">•</span>
-            <span class="weather">-2°C ❄️</span>
+            <span class="city">Karaganda</span><span class="divider">•</span><span class="weather">-2°C ❄️</span>
         </div>
         <div class="brand-row">
             <div class="logo">Aitax</div>
-            <button class="btn-icon glass-effect" id="btn-settings" onclick="openSidebar()">
-                <ion-icon name="options"></ion-icon>
-            </button>
+            <button class="btn-icon glass-effect" onclick="openSidebar()"><ion-icon name="options"></ion-icon></button>
         </div>
     </header>
 
@@ -35,80 +35,76 @@
             <div class="feed-composer glass-morphism">
                 <div class="composer-top">
                     <div class="avatar-circle">R</div>
-                    <input type="text" placeholder="Поделитесь..." class="clean-input">
+                    <textarea id="post-text-input" placeholder="Что нового, Руслан?" class="clean-input area" rows="1"></textarea>
                 </div>
+                <div id="image-preview-container" class="hidden">
+                     <img id="image-preview" src="" alt="">
+                     <button id="remove-image-btn">✕</button>
+                </div>
+                
                 <div class="composer-bot">
-                    <button class="btn-att"><ion-icon name="images-outline"></ion-icon></button>
-                    <button class="btn-post">Опубликовать</button>
+                    <input type="file" id="file-input" accept="image/*" hidden>
+                    <button class="btn-att" onclick="document.getElementById('file-input').click()">
+                        <ion-icon name="images-outline"></ion-icon>
+                    </button>
+                    <button class="btn-post" onclick="publishPost()">Опубликовать</button>
                 </div>
             </div>
             
-            <div class="feed-stream custom-scroll">
+            <div class="feed-stream custom-scroll" id="feed-container">
                 <div class="post-card glass-morphism">
                     <div class="post-head">
                         <div class="avatar-mini" style="background: #ff2d55;">A</div>
-                        <span class="name">Aisulu</span>
-                        <span class="time">5м</span>
+                        <span class="name">Aisulu</span><span class="time">5м</span>
                     </div>
                     <div class="text">На юго-востоке открыли новую дорогу! 🔥 Пробок стало меньше.</div>
                     <div class="post-actions">
-                        <span><ion-icon name="heart-outline"></ion-icon> 12</span>
-                        <span><ion-icon name="chatbubble-outline"></ion-icon> 4</span>
+                        <button class="act-btn like-btn" onclick="toggleLike(this)">
+                            <ion-icon name="heart-outline"></ion-icon> <span class="count">12</span>
+                        </button>
+                        <button class="act-btn comment-btn">
+                            <ion-icon name="chatbubble-outline"></ion-icon> <span class="count">4</span>
+                        </button>
+                         <button class="act-btn share-btn" onclick="sharePost(this)">
+                            <ion-icon name="share-social-outline"></ion-icon>
+                        </button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="screen-map" class="view">
-            <div class="map-wrapper">
-                <iframe src="about:blank" id="map-frame"></iframe>
-                
-                <button class="map-pin-sticker glass-effect" style="top:30%; left:20%" onclick="openModal('promo-burger')">🍔 -20%</button>
-                <button class="map-pin-sticker glass-effect" style="top:55%; left:75%" onclick="openModal('promo-cinema')">🎬 Кино</button>
-                <button class="map-pin-sticker glass-effect" style="top:20%; left:60%">✂️ Барбер</button>
-                <button class="map-pin-sticker glass-effect" style="top:70%; left:40%">💊 Аптека</button>
-            </div>
+        <section id="screen-map" class="view" style="padding: 0;">
+            <div id="map-container"></div>
+            <div class="map-overlays">
+                 <button class="map-btn-locate glass-effect" onclick="locateUser()">
+                     <ion-icon name="locate"></ion-icon>
+                 </button>
+             </div>
         </section>
 
-        <section id="screen-home" class="view active">
+        <section id="screen-home" class="view active home-view">
             <div class="chat-container custom-scroll">
                 <div class="ai-msg">
                     <div class="ai-avatar">Ai</div>
-                    <div class="msg-bubble">Привет! Я Aitax AI. Нажми кнопку внизу, чтобы заказать такси.</div>
+                    <div class="msg-bubble">Привет, Руслан! Куда поедем сегодня?</div>
                 </div>
             </div>
 
             <div class="order-panel glass-morphism">
                 <div class="panel-handle"></div>
                 <div class="route-inputs">
-                    <div class="input-line">
-                        <ion-icon name="navigate" class="ic-blue"></ion-icon>
-                        <input type="text" value="Моё местоположение" readonly class="clean-input dim">
-                    </div>
+                    <div class="input-line"><ion-icon name="navigate" class="ic-blue"></ion-icon><input type="text" value="Моё местоположение" readonly class="clean-input dim"></div>
                     <div class="sep"></div>
-                    <div class="input-line">
-                        <ion-icon name="location" class="ic-red"></ion-icon>
-                        <input type="text" id="inp-dest" placeholder="Куда едем?" class="clean-input bold">
-                    </div>
+                    <div class="input-line"><ion-icon name="location" class="ic-red"></ion-icon><input type="text" id="inp-dest" placeholder="Куда едем?" class="clean-input bold"></div>
                 </div>
-
                 <div class="options-row">
-                    <div class="opt-box">
-                        <span class="label">Цена (₸)</span>
-                        <input type="number" id="inp-price" placeholder="Предложите" class="clean-input num">
-                    </div>
-                    <div class="opt-box">
-                        <span class="label">Комментарий</span>
-                        <input type="text" placeholder="..." class="clean-input">
-                    </div>
+                    <div class="opt-box"><span class="label">Цена (₸)</span><input type="number" id="inp-price" placeholder="Предложите" class="clean-input num"></div>
                 </div>
-
                 <div class="tariffs-row">
                     <button class="tariff selected" onclick="setTariff(this)">Eco</button>
                     <button class="tariff" onclick="setTariff(this)">Comf</button>
-                    <button class="tariff lux" onclick="setTariff(this)">Lux</button>
+                    <button class="tariff" onclick="setTariff(this)">Lux</button>
                 </div>
-
                 <button class="btn-go glow-anim">Поехали</button>
             </div>
         </section>
@@ -123,7 +119,7 @@
                     <button onclick="openModal('modal-send')"><ion-icon name="swap-horizontal"></ion-icon>Перевод</button>
                 </div>
             </div>
-            <div class="history-list custom-scroll">
+             <div class="history-list custom-scroll">
                 <h3 class="section-title">История</h3>
                 <div class="h-item glass-effect">
                     <div class="icon-box"><ion-icon name="car-sport"></ion-icon></div>
@@ -134,18 +130,25 @@
         </section>
 
         <section id="screen-profile" class="view">
+            <div class="driver-block glass-morphism">
+                <div class="driver-avatar-big">
+                    <img src="https://i.pravatar.cc/150?img=11" alt="Driver"> </div>
+                <h2 class="driver-name">Руслан Ахметов</h2>
+                <div class="car-details">
+                    <span class="car-name">Toyota Camry 70</span>
+                    <span class="car-year">2021, Белый</span>
+                </div>
+                 <div class="kz-number">
+                    <span class="kz-flag">🇰🇿</span> 777 ANB 09
+                </div>
+            </div>
+
             <div class="profile-head">
                 <div class="stat glass-effect"><span>4.98</span><small>Рейтинг</small></div>
                 <div class="stat glass-effect"><span>124</span><small>Поездки</small></div>
             </div>
 
-            <button class="rent-btn-card glass-morphism glow-hover" onclick="openModal('modal-rent')">
-                <div class="rent-info"><h3>Rentauto</h3><p>Аренда авто для работы</p></div>
-                <div class="rent-img">🚖</div>
-                <div class="rent-arr"><ion-icon name="chevron-forward"></ion-icon></div>
-            </button>
-
-            <h3 class="section-title" style="padding: 0 20px;">Эфир заказов</h3>
+             <h3 class="section-title" style="padding: 0 20px; margin-top: 20px;">Эфир заказов</h3>
             <div class="orders-list custom-scroll">
                 <div class="order-strip glass-morphism">
                     <div class="route"><span class="dot a"></span> Гоголя 34 <span class="arrow">→</span> <span class="dot b"></span> Майкудук</div>
@@ -164,40 +167,18 @@
     </nav>
 
     <div id="modal-overlay" class="modal-overlay hidden">
-        <div id="modal-rent" class="modal-card">
-            <div class="m-head"><h3>Rentauto</h3><button class="close-m">✕</button></div>
-            <div class="cars-grid">
-                <div class="car-item"><div class="emoji-car">🚗</div><div>Camry 70</div><small>15k ₸</small></div>
-            </div>
-            <button class="btn-full">Забронировать</button>
-        </div>
         <div id="modal-pay" class="modal-card">
             <div class="m-head"><h3>Пополнение</h3><button class="close-m">✕</button></div>
             <input type="number" class="modal-inp" placeholder="Сумма (₸)">
             <button class="btn-full">Оплатить</button>
         </div>
-        <div id="promo-burger" class="modal-card center-text">
-             <div class="m-head"><h3>Burger King</h3><button class="close-m">✕</button></div>
-             <div class="big-emoji">🍔</div><p>Скидка 20%!</p>
-        </div>
-        <div id="promo-cinema" class="modal-card center-text">
-             <div class="m-head"><h3>Kinopark</h3><button class="close-m">✕</button></div>
-             <div class="big-emoji">🍿</div><p>Попкорн в подарок</p>
-        </div>
-        <div id="modal-out" class="modal-card"><div class="m-head"><h3>Вывод</h3><button class="close-m">✕</button></div></div>
-        <div id="modal-send" class="modal-card"><div class="m-head"><h3>Перевод</h3><button class="close-m">✕</button></div></div>
     </div>
-
+    
     <div id="sidebar-settings" class="sidebar">
-        <div class="sidebar-head"><h2>Настройки</h2><button class="close-side" onclick="closeSidebar()">✕</button></div>
-        <div class="set-list">
-            <div class="set-item"><ion-icon name="person-circle-outline"></ion-icon> Аккаунт</div>
-            <div class="set-item"><ion-icon name="globe-outline"></ion-icon> Город</div>
-            <div class="set-item"><ion-icon name="color-palette-outline"></ion-icon> Оформление</div>
-            <div class="set-item"><ion-icon name="help-circle-outline"></ion-icon> Поддержка</div>
-        </div>
-    </div>
+         <div class="sidebar-head"><h2>Настройки</h2><button class="close-side" onclick="closeSidebar()">✕</button></div>
+         </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
