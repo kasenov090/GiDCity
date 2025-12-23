@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GiDCity</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Aitax</title> <link rel="stylesheet" href="style.css">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -16,8 +15,16 @@
     <div class="cyber-grid"></div>
 
     <div class="top-bar">
+        <div class="status-row" style="display:flex; justify-content:center; gap:5px; align-items:center; margin-bottom:10px;">
+            <span>Karaganda</span> • <span>-2°C ❄️</span>
+            <ion-icon name="chevron-down-outline"></ion-icon>
+        </div>
+
         <div class="brand-row">
-            <div class="logo">GiDCity</div>
+            <button class="btn-icon" onclick="window.Telegram?.WebApp?.close()" style="width:32px; height:32px; font-size:16px;">✕</button>
+            
+            <div class="logo">Aitax</div>
+            
             <div class="btn-icon" onclick="toggleSidebar()"><ion-icon name="menu-outline"></ion-icon></div>
         </div>
     </div>
@@ -38,6 +45,8 @@
         <div class="map-overlays">
             <div class="map-btn-locate" onclick="centerMap()"><ion-icon name="locate"></ion-icon></div>
         </div>
+
+        <div class="chat-container"></div>
 
         <div class="order-panel">
             <div class="panel-handle"></div>
@@ -100,7 +109,7 @@
                         <div style="font-size:11px; color:gray;">Только что</div>
                     </div>
                 </div>
-                <div style="font-size:15px; line-height:1.4;">Добро пожаловать в GiDCity! 🚀</div>
+                <div style="font-size:15px; line-height:1.4;">Добро пожаловать в Aitax! 🚀</div>
                 <div class="post-actions">
                     <button class="act-btn"><ion-icon name="heart-outline"></ion-icon> 12</button>
                     <button class="act-btn"><ion-icon name="chatbubble-outline"></ion-icon> 4</button>
@@ -150,16 +159,6 @@
                 <div style="background:rgba(255,255,255,0.1); padding:5px 12px; border-radius:10px;">Level 5</div>
             </div>
         </div>
-        <div class="profile-stats-row">
-            <div class="stat-card">
-                <div class="stat-val">142</div>
-                <div style="font-size:12px; color:gray;">Поездки</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-val">8ч</div>
-                <div style="font-size:12px; color:gray;">На линии</div>
-            </div>
-        </div>
         <div class="section-title">Эфир заказов</div>
         <div class="orders-list">
             <div class="order-strip">
@@ -193,7 +192,7 @@
         <button class="dock-item active" onclick="switchTab('home')"><ion-icon name="navigate-circle-outline"></ion-icon></button>
         <button class="dock-item" onclick="switchTab('feed')"><ion-icon name="people-outline"></ion-icon></button>
         
-<div class="ai-button" onclick="activateAI()">Ai</div>
+        <div class="ai-button" onclick="activateAI()">Ai</div>
         
         <button class="dock-item" onclick="switchTab('wallet')"><ion-icon name="wallet-outline"></ion-icon></button>
         <button class="dock-item" onclick="switchTab('driver')"><ion-icon name="car-sport-outline"></ion-icon></button>
