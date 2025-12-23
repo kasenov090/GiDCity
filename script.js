@@ -87,13 +87,24 @@ function switchTab(tabId) {
     if(tabId === 'home') {
         document.getElementById('home-view').classList.add('active');
         initMap();
-    } else if(tabId === 'city') {
+        document.querySelector('.ai-button').parentElement.style.transform = "scale(1.1)";
+    } else {
+         document.querySelector('.ai-button').parentElement.style.transform = "scale(1)";
+    }
+    
+    if(tabId === 'city') {
         document.getElementById('city-view').classList.add('active');
         // Переключаем на карту, если была открыта, или на афишу
         setTimeout(() => { if(cityMap) cityMap.invalidateSize(); }, 200);
-    } else {
+    } else if (tabId !== 'home') {
         document.getElementById(tabId + '-view').classList.add('active');
     }
+    
+    // Подсветка кнопок
+    if(tabId === 'city') document.querySelectorAll('.dock-item')[0].classList.add('active');
+    if(tabId === 'feed') document.querySelectorAll('.dock-item')[1].classList.add('active');
+    if(tabId === 'wallet') document.querySelectorAll('.dock-item')[2].classList.add('active');
+    if(tabId === 'driver') document.querySelectorAll('.dock-item')[3].classList.add('active');
 }
 
 // Сворачивание панели такси
@@ -207,6 +218,36 @@ function openCommentModal(id) {
     openModal('comment-thread-modal');
 }
 
+// === ЧАТ и AI ===
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessageBubble(text, 'user');
+    input.value = '';
+    setTimeout(() => aiReply(text), 1000);
+}
+
+function addMessageBubble(text, sender) {
+    const container = document.querySelector('.chat-container');
+    const div = document.createElement('div');
+    div.className = 'ai-msg';
+    if(sender === 'user') {
+        div.style.justifyContent = 'flex-end';
+        div.innerHTML = `<div class="msg-bubble" style="background:var(--accent); color:white;">${text}</div>`;
+    } else {
+        div.innerHTML = `<div class="ai-avatar">Ai</div><div class="msg-bubble">${text}</div>`;
+    }
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function aiReply(text) {
+    addMessageBubble("Ищу свободную машину...", 'ai');
+}
+
+
 // === ТОРГ И ЗАКАЗ ===
 function openOrderNegotiation() { openModal('order-negotiation-modal'); }
 
@@ -255,7 +296,11 @@ function closeSubMenu() {
 function setLang(l) {
     document.querySelectorAll('.setting-list-btn').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
-    // Logic here
+}
+
+function setTheme(id) {
+    // Логика смены темы
+    alert("Тема применена!");
 }
 
 // === UTIL ===
@@ -267,5 +312,4 @@ function closeModal(id) {
 }
 function openWalletModal(type) {
     openModal('wallet-action-modal');
-    // Logic for title change
 }
