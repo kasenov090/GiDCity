@@ -25,7 +25,7 @@
                 
                 <div class="sms-group" style="display:none; margin-top:10px;" id="sms-block">
                     <input type="number" placeholder="Код из СМС" id="auth-code" class="glass-inp" value="1234">
-                    <div style="font-size:11px; color:gray; margin-top:5px;">Код: 1234</div>
+                    <div style="font-size:11px; color:gray; margin-top:5px;">Код для теста: 1234</div>
                 </div>
             </div>
             <button class="btn-full" onclick="tryLogin()" id="btn-login-action">Войти</button>
@@ -79,9 +79,9 @@
                     <ion-icon name="time" style="color:#00cec9"></ion-icon>
                     <span>История</span>
                 </div>
-                <div class="setting-card" onclick="alert('Добавить рекламу')">
+                <div class="setting-card" onclick="alert('Реклама добавлена!')">
                     <ion-icon name="megaphone" style="color:#ff7675"></ion-icon>
-                    <span>Реклама</span>
+                    <span>Добавить рекламу</span>
                 </div>
             </div>
         </div>
@@ -192,7 +192,7 @@
 
     <div id="feed-view" class="view custom-scroll">
         <div class="feed-header">
-            <select class="city-select">
+            <select class="city-select glass-inp" style="width: auto; padding: 8px;">
                 <option>Все города</option>
                 <option selected>Караганда</option>
                 <option>Астана</option>
