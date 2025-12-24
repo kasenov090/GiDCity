@@ -1,228 +1,223 @@
-// === ИНИЦИАЛИЗАЦИЯ ===
-const tg = window.Telegram?.WebApp;
-if(tg) { tg.ready(); tg.expand(); }
+// --- Глобальные переменные для карт ---
+let homeMap; // Карта заказа такси
+let cityMap; // Карта города (в разделе City)
 
-// Переменные карт
-let map, cityMap;
-let isPanelCollapsed = false;
+// --- Инициализация карт 2ГИС ---
+// Весь код работы с картой должен быть внутри DG.then()
+DG.then(function () {
+    // 1. Инициализация главной карты (Home View)
+    homeMap = DG.map('map-container', {
+        center: [49.8029, 73.1021], // Центр Караганды
+        zoom: 16,
+        zoomControl: false,      // Скрываем стандартные кнопки зума
+        fullscreenControl: false, // Скрываем кнопку полного экрана
+        geoclicker: true         // Разрешаем кликать по зданиям
+    });
 
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. Показываем Авторизацию
-    document.getElementById('auth-screen').style.display = 'flex';
-    
-    // 2. Инициализируем обработчики для панели
-    initPanelLogic();
+    // Добавим маркер "Я" (центр экрана)
+    DG.marker([49.8029, 73.1021]).addTo(homeMap);
+
+    // 2. Инициализация карты города (City View)
+    cityMap = DG.map('city-map-container', {
+        center: [49.8029, 73.1021],
+        zoom: 13,
+        zoomControl: false,
+        fullscreenControl: false
+    });
 });
 
-// === ЛОГИКА АВТОРИЗАЦИИ ===
-function sendSms() {
-    const codeBlock = document.getElementById('sms-block');
-    const btn = document.getElementById('btn-login-action');
+// --- Логика навигации (Таббар) ---
+function switchTab(tabId) {
+    // Скрываем все view
+    document.querySelectorAll('.view').forEach(el => {
+        el.classList.remove('active');
+        // Скрываем с анимацией (опционально) или просто display: none через CSS
+    });
     
-    if(codeBlock.style.display === 'none') {
-        // Шаг 1: Показать поле кода
-        codeBlock.style.display = 'block';
-        btn.innerText = "Войти";
-        document.getElementById('auth-code').focus(); // Автофокус
-    } else {
-        // Шаг 2: Вход
-        document.getElementById('auth-screen').style.display = 'none';
-        switchTab('home'); // Сразу домой
+    // Показываем нужный
+    const target = document.getElementById(tabId + '-view');
+    if (target) {
+        target.classList.add('active');
+    }
+
+    // Обновляем иконки в доке
+    document.querySelectorAll('.dock-item').forEach(btn => {
+        // Простая логика подсветки (можно доработать по ID)
+        btn.style.color = 'var(--text-gray)';
+    });
+    
+    // Спец-обработка для карты при переключении табов
+    // (Иногда карта может стать серой, если инициализировалась в скрытом блоке)
+    if (tabId === 'home' && homeMap) {
+        homeMap.invalidateSize();
+    }
+    if (tabId === 'city' && cityMap) {
+        // Если мы сразу попали на вкладку карты внутри сити
+        setTimeout(() => cityMap.invalidateSize(), 100);
     }
 }
-function continueAsGuest() {
-    document.getElementById('auth-screen').style.display = 'none';
-    switchTab('feed'); // Гости только в ленту
+
+// --- Логика раздела City (Афиша / Карта) ---
+function switchCityTab(tabName) {
+    // Переключение кнопок
+    document.querySelectorAll('.c-tab').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    // Переключение контента
+    document.querySelectorAll('.city-content').forEach(el => el.classList.remove('active'));
+    
+    if (tabName === 'billboard') {
+        document.getElementById('tab-billboard').classList.add('active');
+    } else {
+        document.getElementById('tab-citymap').classList.add('active');
+        // Важно: пересчитать размеры карты при показе
+        if (cityMap) {
+            cityMap.invalidateSize(); 
+        }
+    }
 }
 
-// === ЛОГИКА ГЛАВНОГО ЭКРАНА (ПАНЕЛЬ И КАРТА) ===
-function initPanelLogic() {
-    // Клик по карте (или фону) сворачивает/разворачивает панель
-    const mapContainer = document.getElementById('map-container');
-    const panel = document.getElementById('main-panel');
-    
-    // При клике на фон (карту)
-    mapContainer.addEventListener('click', () => {
-        isPanelCollapsed = !isPanelCollapsed;
-        if(isPanelCollapsed) {
-            panel.classList.add('collapsed');
-        } else {
-            panel.classList.remove('collapsed');
-        }
-    });
-}
+// --- Логика панели заказа (шторка) ---
+let isPanelOpen = false;
 function togglePanelState() {
     const panel = document.getElementById('main-panel');
-    panel.classList.toggle('collapsed');
-    isPanelCollapsed = panel.classList.contains('collapsed');
+    isPanelOpen = !isPanelOpen;
+    
+    if (isPanelOpen) {
+        panel.style.transform = 'translateY(0)'; // Полностью открыта
+        // panel.style.height = '80%'; // Можно менять высоту динамически
+    } else {
+        panel.style.transform = 'translateY(calc(100% - 180px))'; // Свернута, торчит низ
+    }
 }
 
 // Выбор тарифа
 function selectTariff(el) {
-    document.querySelectorAll('.tariff-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.tariff-card').forEach(card => card.classList.remove('selected'));
     el.classList.add('selected');
 }
 
-// === КАРТЫ ===
-function initMap() {
-    if(!map) {
-        map = L.map('map-container', { zoomControl: false, attributionControl: false }).setView([49.80, 73.10], 13);
-        // ТЕМНАЯ КАРТА ПО УМОЛЧАНИЮ
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19
-        }).addTo(map);
-        
-        // Обработчик клика по карте для сворачивания панели
-        map.on('click', () => {
-            togglePanelState();
-        });
-    }
-    setTimeout(() => map.invalidateSize(), 200);
-}
-
-function initCityMap() {
-    if(!cityMap) {
-        cityMap = L.map('city-map-container', { zoomControl: false, attributionControl: false }).setView([49.80, 73.10], 13);
-        // Тоже темная карта для города
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(cityMap);
-    }
-    setTimeout(() => cityMap.invalidateSize(), 200);
-}
-
+// Центрирование карты (кнопка навигации)
 function centerMap() {
-    // Имитация геолокации
-    if(map) map.flyTo([49.80, 73.10], 14);
-}
-
-// === НАВИГАЦИЯ (TABS) ===
-function switchTab(id) {
-    // Скрываем все view
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.dock-item').forEach(b => b.classList.remove('active'));
-    
-    // Активируем нужный
-    const target = document.getElementById(id + '-view');
-    if(target) target.classList.add('active');
-    
-    // Обновляем иконки
-    if(id === 'home') setTimeout(initMap, 100);
-    if(id === 'city') {
-        document.querySelector('[onclick="switchTab(\'city\')"]').classList.add('active');
-        // По умолчанию открываем Афишу, но карта уже готова
-    }
-    if(id === 'feed') document.querySelector('[onclick="switchTab(\'feed\')"]').classList.add('active');
-    if(id === 'wallet') document.querySelector('[onclick="switchTab(\'wallet\')"]').classList.add('active');
-}
-
-// === ЛОГИКА ГОРОДА (АФИША / КАРТА) ===
-function switchCityTab(tab) {
-    // Кнопки
-    document.querySelectorAll('.c-tab').forEach(b => b.classList.remove('active'));
-    
-    // Контент
-    document.getElementById('tab-billboard').style.display = 'none';
-    document.getElementById('tab-citymap').style.display = 'none'; // Скрываем через display, чтобы не конфликтовали
-    
-    if(tab === 'billboard') {
-        document.querySelectorAll('.c-tab')[0].classList.add('active');
-        document.getElementById('tab-billboard').style.display = 'block';
-    } else {
-        document.querySelectorAll('.c-tab')[1].classList.add('active');
-        document.getElementById('tab-citymap').style.display = 'block';
-        initCityMap();
+    if (homeMap) {
+        homeMap.setView([49.8029, 73.1021], 16);
     }
 }
 
-// === ЛЕНТА И ПОСТЫ ===
+// --- Модальные окна ---
 function openModal(id) {
     document.getElementById(id).classList.remove('hidden');
-    setTimeout(() => document.getElementById(id).querySelector('.modal-card') || document.getElementById(id).classList.add('active'), 10);
+    document.getElementById(id).style.display = 'flex';
 }
+
 function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
     document.getElementById(id).classList.add('hidden');
+    setTimeout(() => {
+        document.getElementById(id).style.display = 'none';
+    }, 200); // Задержка для анимации если есть
 }
 
-// Создание поста (Фото превью)
-const postImgInput = document.getElementById('post-img-input');
-if(postImgInput) {
-    postImgInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if(file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                document.getElementById('img-preview-area').classList.remove('hidden');
-                document.getElementById('img-preview-tag').src = ev.target.result;
-            }
-            reader.readAsDataURL(file);
-        }
-    });
-}
-function removeImg() {
-    document.getElementById('post-img-input').value = "";
-    document.getElementById('img-preview-area').classList.add('hidden');
-}
-function publishPost() {
-    const text = document.getElementById('new-post-text').value;
-    if(!text) return alert("Напишите текст!");
-    
-    // Добавляем пост в ленту (визуально)
-    const stream = document.getElementById('feed-stream');
-    const newPost = `
-    <div class="post-card">
-        <div class="post-head">
-            <div class="avatar-mini">Я</div>
-            <div class="ph-info"><span class="ph-name">Вы</span><span class="ph-time">Только что</span></div>
-            <button class="icon-btn-text text-danger" onclick="deletePost(this)"><ion-icon name="trash-outline"></ion-icon></button>
-        </div>
-        <div class="post-text">${text}</div>
-        ${!document.getElementById('img-preview-area').classList.contains('hidden') ? '<div style="margin-top:10px; border-radius:10px; overflow:hidden;"><img src="'+document.getElementById('img-preview-tag').src+'" style="width:100%"></div>' : ''}
-        <div class="post-actions">
-            <button class="act-item"><ion-icon name="heart-outline"></ion-icon> 0</button>
-            <button class="act-item"><ion-icon name="chatbubble-outline"></ion-icon> 0</button>
-        </div>
-    </div>`;
-    
-    stream.insertAdjacentHTML('afterbegin', newPost);
-    closeModal('create-post-modal');
-    document.getElementById('new-post-text').value = "";
-    removeImg();
-}
-
-function deletePost(btn) {
-    if(confirm("Удалить пост?")) {
-        btn.closest('.post-card').remove();
-    }
-}
-function toggleLike(btn) {
-    const icon = btn.querySelector('ion-icon');
-    if(icon.name === 'heart-outline') {
-        icon.name = 'heart';
-        icon.style.color = '#ff453a';
-    } else {
-        icon.name = 'heart-outline';
-        icon.style.color = 'white';
-    }
-}
-
-// === НАСТРОЙКИ (НОВЫЙ ЭКРАН) ===
+// --- Настройки (Settings) ---
 function openSettings() {
     document.getElementById('settings-view').classList.add('active');
 }
+
 function closeSettings() {
     document.getElementById('settings-view').classList.remove('active');
 }
+
 function openSubSetting(id) {
+    document.getElementById(id).classList.remove('hidden');
     document.getElementById(id).classList.add('active');
 }
+
 function closeSubSetting(id) {
     document.getElementById(id).classList.remove('active');
+    setTimeout(() => {
+        document.getElementById(id).classList.add('hidden');
+    }, 300);
 }
 
-// Редактирование профиля
-function saveProfile() {
-    const newName = document.getElementById('edit-name-inp').value;
-    document.getElementById('settings-name-preview').innerText = newName;
-    alert("Профиль сохранен!");
-    closeSubSetting('profile-edit');
+// --- AI Чат (заглушка) ---
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const area = document.getElementById('ai-response-area');
+    
+    if (input.value.trim() === "") return;
+
+    area.style.display = 'block';
+    area.innerHTML = `<div class="ai-loading">Думаю...</div>`;
+    
+    setTimeout(() => {
+        area.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <ion-icon name="sparkles" style="color:var(--accent)"></ion-icon>
+                <span>Маршрут построен! Ехать 12 минут. Стоимость ~950₸</span>
+            </div>
+        `;
+    }, 1500);
+}
+
+function startOrder() {
+    // Логика начала поиска водителя
+    openModal('order-negotiation-modal');
+}
+
+// --- Кошелек (Модалки) ---
+function openWalletModal(type) {
+    const title = type === 'deposit' ? 'Пополнение' : 'Перевод';
+    alert(`Открываем окно: ${title} (В разработке)`);
+}
+
+// --- Аутентификация (Заглушка) ---
+function sendSms() {
+    document.getElementById('btn-login-action').innerText = 'Отправить снова';
+    document.getElementById('sms-block').style.display = 'block';
+}
+
+function continueAsGuest() {
+    document.getElementById('auth-screen').style.display = 'none';
+}
+
+// --- Соцсеть (Feed) ---
+function toggleLike(btn) {
+    const icon = btn.querySelector('ion-icon');
+    if (icon.name === 'heart-outline') {
+        icon.name = 'heart';
+        icon.style.color = '#ff4757';
+        btn.style.color = '#ff4757';
+    } else {
+        icon.name = 'heart-outline';
+        icon.style.color = 'inherit';
+        btn.style.color = 'inherit';
+    }
+}
+
+function publishPost() {
+    const text = document.getElementById('new-post-text').value;
+    if (!text) return;
+    
+    // Создаем HTML нового поста
+    const feed = document.getElementById('feed-stream');
+    const newPost = document.createElement('div');
+    newPost.className = 'post-card';
+    newPost.innerHTML = `
+        <div class="post-head">
+            <div class="avatar-mini"><ion-icon name="person"></ion-icon></div>
+            <div class="ph-info">
+                <span class="ph-name">Гость</span>
+                <span class="ph-time">Только что</span>
+            </div>
+        </div>
+        <div class="post-text">${text}</div>
+        <div class="post-actions">
+            <button class="act-item" onclick="toggleLike(this)">
+                <ion-icon name="heart-outline"></ion-icon> <span class="count">0</span>
+            </button>
+        </div>
+    `;
+    
+    feed.prepend(newPost);
+    closeModal('create-post-modal');
+    document.getElementById('new-post-text').value = '';
 }
